@@ -2,6 +2,8 @@
 import type { DragEvent } from 'react';
 import type { EffectConfig, AvailableEffects, EffectParam } from '../types';
 import EffectControl from './EffectControl';
+import type { ThemePreset } from '../theme-presets';
+import { cn } from '../utils/classnames';
 
 interface EffectChainProps {
   effects: EffectConfig[];
@@ -10,6 +12,7 @@ interface EffectChainProps {
   onClearEffects: () => void;
   onExportEffects: () => void;
   onImportEffects: () => void;
+  theme: ThemePreset;
 }
 
 const defaultValueForParam = (paramDef: EffectParam): any => {
@@ -49,6 +52,7 @@ export default function EffectChain({
   onClearEffects,
   onExportEffects,
   onImportEffects,
+  theme,
 }: EffectChainProps) {
   const [selectedEffectType, setSelectedEffectType] = useState<string>('');
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -140,15 +144,31 @@ export default function EffectChain({
     setActiveHoverId(null);
   };
 
+  const panelClass = cn(
+    'rounded-3xl p-5 transition-colors duration-300 border backdrop-blur-sm',
+    theme.effectPanelClass,
+  );
+  const baseButtonClass =
+    'px-3 py-2 text-sm font-medium rounded transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60';
+  const primaryButtonClass = cn(baseButtonClass, theme.buttonPrimaryClass);
+  const secondaryButtonClass = cn(baseButtonClass, theme.buttonSecondaryClass);
+  const ghostButtonClass = cn(baseButtonClass, theme.buttonGhostClass);
+  const selectClass = cn(
+    'w-full px-3 py-2 text-sm rounded transition-colors focus:outline-none',
+    theme.selectClass,
+  );
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
-      <h3 className="text-sm font-semibold text-gray-900 mb-4">Effects</h3>
+    <div className={panelClass}>
+      <h3 className={cn('text-sm font-semibold mb-4 uppercase tracking-wide', theme.headingTextClass)}>
+        Effects
+      </h3>
 
       <div className="mb-4 space-y-2">
         <select
           value={selectedEffectType}
           onChange={(e) => setSelectedEffectType(e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className={selectClass}
         >
           <option value="">Select effect...</option>
           {Object.entries(availableEffects)
@@ -160,33 +180,25 @@ export default function EffectChain({
             ))}
         </select>
         <div className="flex gap-2">
-          <button
-            onClick={addEffect}
-            disabled={!selectedEffectType}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-3 py-2 rounded text-sm font-medium disabled:cursor-not-allowed"
-          >
+          <button onClick={addEffect} disabled={!selectedEffectType} className={primaryButtonClass}>
             Add Effect
           </button>
           <button
             onClick={onClearEffects}
             disabled={effects.length === 0}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 px-3 py-2 rounded text-sm font-medium border border-gray-200 disabled:cursor-not-allowed"
+            className={secondaryButtonClass}
           >
             Clear All Effects
           </button>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={onImportEffects}
-            className="flex-1 bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium border border-gray-200"
-            type="button"
-          >
+          <button onClick={onImportEffects} className={ghostButtonClass} type="button">
             Import Settings
           </button>
           <button
             onClick={onExportEffects}
             disabled={effects.length === 0}
-            className="flex-1 bg-white hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 px-3 py-2 rounded text-sm font-medium border border-gray-200 disabled:cursor-not-allowed"
+            className={ghostButtonClass}
             type="button"
           >
             Export Settings
@@ -195,17 +207,24 @@ export default function EffectChain({
       </div>
 
       {effects.length === 0 ? (
-        <div className="text-center py-8 text-gray-400 text-sm">
+        <div className="text-center py-8 text-sm uppercase tracking-wide opacity-70">
           No effects added
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {effects.map((effect, index) => {
             const definition = availableEffects[effect.type];
             if (!definition) return null;
 
             const isDragging = draggingId === effect.id;
             const isTarget = activeHoverId === effect.id && !isDragging;
+
+            const cardClass = cn(
+              'rounded-2xl border transition-shadow duration-200',
+              theme.effectCardClass,
+              isDragging && theme.effectCardActiveClass,
+              isTarget && theme.effectCardTargetClass,
+            );
 
             return (
               <div
@@ -216,19 +235,14 @@ export default function EffectChain({
                 onDragEnter={handleDragOverCard(effect.id, index)}
                 onDrop={handleDrop}
                 onDragEnd={handleDragEnd}
-                className={`rounded border transition-shadow ${
-                  isDragging
-                    ? 'border-blue-400 bg-blue-50 shadow-md'
-                    : isTarget
-                    ? 'border-blue-200 bg-blue-50'
-                    : 'border-transparent bg-white'
-                }`}
               >
                 <EffectControl
                   effect={effect}
                   definition={definition}
                   onUpdate={(updated) => updateEffect(index, updated)}
                   onRemove={() => removeEffect(index)}
+                  className={cardClass}
+                  theme={theme}
                 />
               </div>
             );
@@ -237,7 +251,7 @@ export default function EffectChain({
       )}
 
       {effects.length > 0 && (
-        <p className="mt-2 text-[11px] text-gray-400">
+        <p className={cn('mt-3 text-[11px]', theme.mutedTextClass)}>
           Drag any effect card to change its position. The chain updates as you move.
         </p>
       )}
