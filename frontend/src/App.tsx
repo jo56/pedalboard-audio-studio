@@ -39,9 +39,10 @@ function App() {
       const response = await audioAPI.uploadFile(file);
       setFileId(response.file_id);
       setSuccessMessage('File uploaded successfully!');
-    } catch (err) {
-      setError('Failed to upload file');
-      console.error(err);
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || err.message || 'Failed to upload file';
+      setError(`Upload failed: ${errorMessage}`);
+      console.error('Upload error:', err);
     }
   };
 
@@ -60,9 +61,10 @@ function App() {
       const downloadUrl = audioAPI.getDownloadUrl(fileId);
       setProcessedAudioUrl(downloadUrl);
       setSuccessMessage('Audio processed successfully!');
-    } catch (err) {
-      setError('Failed to process audio. Please try again.');
-      console.error(err);
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || err.message || 'Failed to process audio';
+      setError(`Processing failed: ${errorMessage}`);
+      console.error('Processing error:', err);
     } finally {
       setIsProcessing(false);
     }
