@@ -70,6 +70,10 @@ export const audioAPI = {
     await api.delete(`/cleanup/${fileId}`);
   },
 
+  async clearProcessed(fileId: string): Promise<void> {
+    await api.delete(`/processed/${fileId}`);
+  },
+
   async listPresets(): Promise<PresetSummary[]> {
     const response = await api.get<PresetSummary[]>('/presets');
     return response.data;
@@ -80,8 +84,8 @@ export const audioAPI = {
     return response.data;
   },
 
-  async createPreset(request: PresetCreateRequest): Promise<{ preset: PresetPayload; download_url: string; }> {
-    const response = await api.post<{ preset: PresetPayload; download_url: string; }>('/presets', request);
+  async createPreset(request: PresetCreateRequest): Promise<{ preset: PresetPayload; download_url: string }> {
+    const response = await api.post<{ preset: PresetPayload; download_url: string }>('/presets', request);
     return response.data;
   },
 

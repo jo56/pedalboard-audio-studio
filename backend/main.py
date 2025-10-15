@@ -35,7 +35,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 PROCESSED_DIR.mkdir(exist_ok=True)
 
 # In-memory storage for file sessions
-file_sessions = {}
+file_sessions: Dict[str, Dict[str, Any]] = {}
 
 
 class EffectConfig(BaseModel):
@@ -160,7 +160,7 @@ async def upload_audio(file: UploadFile = File(...)):
     file_sessions[file_id] = {
         "original_name": file.filename,
         "file_path": str(file_path),
-        "extension": file_ext
+        "extension": file_ext,
     }
 
     return {
@@ -205,6 +205,14 @@ async def process_audio(request: ProcessRequest):
     output_filename = f"{file_id}_processed{extension}"
     output_path = PROCESSED_DIR / output_filename
 
+    existing_processed = session.get("processed_path")
+    if existing_processed and os.path.exists(existing_processed):
+        try:
+            os.remove(existing_processed)
+        except OSError:
+            # Ignore inability to remove; will be overwritten
+            pass
+
     try:
         print(f"Processing audio with {len(effects_list)} effects")
         print(f"Input: {input_path}")
@@ -219,7 +227,8 @@ async def process_audio(request: ProcessRequest):
         if not os.path.exists(str(output_path)):
             raise Exception("Output file was not created successfully")
 
-        file_sessions[file_id]["processed_path"] = str(output_path)
+        session["processed_path"] = str(output_path)
+        session["last_effects"] = effects_list
 
         print("Processing completed successfully")
 
@@ -238,6 +247,30 @@ async def process_audio(request: ProcessRequest):
         print(f"Error processing audio: {str(e)}")
         print(error_details)
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+
+
+@app.delete("/processed/{file_id}")
+async def delete_processed_only(file_id: str):
+    """Delete only the processed audio while keeping the uploaded file."""
+
+    if file_id not in file_sessions:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    session = file_sessions[file_id]
+    processed_path = session.get("processed_path")
+
+    if not processed_path or not os.path.exists(processed_path):
+        raise HTTPException(status_code=404, detail="Processed file not found")
+
+    try:
+        os.remove(processed_path)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to delete processed file: {exc}")
+
+    session.pop("processed_path", None)
+    session.pop("last_effects", None)
+
+    return {"message": "Processed audio deleted", "file_id": file_id}
 
 
 @app.get("/download/{file_id}")
@@ -280,8 +313,9 @@ async def cleanup_files(file_id: str):
     try:
         if os.path.exists(session["file_path"]):
             os.remove(session["file_path"])
-        if "processed_path" in session and os.path.exists(session["processed_path"]):
-            os.remove(session["processed_path"])
+        processed_path = session.get("processed_path")
+        if processed_path and os.path.exists(processed_path):
+            os.remove(processed_path)
 
         del file_sessions[file_id]
 

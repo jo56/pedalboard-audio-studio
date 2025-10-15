@@ -6,6 +6,7 @@ interface EffectChainProps {
   effects: EffectConfig[];
   availableEffects: AvailableEffects;
   onEffectsChange: (effects: EffectConfig[]) => void;
+  onClearEffects: () => void;
 }
 
 const defaultValueForParam = (paramDef: EffectParam): any => {
@@ -35,6 +36,7 @@ export default function EffectChain({
   effects,
   availableEffects,
   onEffectsChange,
+  onClearEffects,
 }: EffectChainProps) {
   const [selectedEffectType, setSelectedEffectType] = useState<string>('');
 
@@ -159,6 +161,14 @@ export default function EffectChain({
           })}
         </div>
       )}
+
+      <button
+        onClick={onClearEffects}
+        disabled={effects.length === 0}
+        className="w-full mt-4 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 px-3 py-2 rounded text-sm font-medium border border-gray-200 disabled:cursor-not-allowed"
+      >
+        Clear All Effects
+      </button>
     </div>
   );
 }

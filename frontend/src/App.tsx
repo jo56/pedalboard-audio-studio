@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import FileUpload from './components/FileUpload';
 import AudioPlayer from './components/AudioPlayer';
 import EffectChain from './components/EffectChain';
@@ -15,12 +15,11 @@ function App() {
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
 
-  // Load available effects on mount
   useEffect(() => {
     const loadEffects = async () => {
       try {
-        const effects = await audioAPI.getEffects();
-        setAvailableEffects(effects);
+        const effectsResponse = await audioAPI.getEffects();
+        setAvailableEffects(effectsResponse);
       } catch (err) {
         setError('Failed to load available effects');
         console.error(err);
@@ -29,11 +28,26 @@ function App() {
     loadEffects();
   }, []);
 
+  const invalidateProcessedAudio = () => {
+    if (processedAudioUrl) {
+      setProcessedAudioUrl('');
+    }
+  };
+
+  const handleEffectsChange = (nextEffects: EffectConfig[]) => {
+    setEffects(nextEffects);
+    if (successMessage) {
+      setSuccessMessage('');
+    }
+    invalidateProcessedAudio();
+  };
+
   const handleFileSelected = async (file: File) => {
     setError('');
     setSuccessMessage('');
     setUploadedFile(file);
     setProcessedAudioUrl('');
+    setEffects([]);
 
     try {
       const response = await audioAPI.uploadFile(file);
@@ -57,10 +71,10 @@ function App() {
     setSuccessMessage('');
 
     try {
-      await audioAPI.processAudio(fileId, effects);
-      const downloadUrl = audioAPI.getDownloadUrl(fileId);
-      setProcessedAudioUrl(downloadUrl);
-      setSuccessMessage('Audio processed successfully!');
+      const response = await audioAPI.processAudio(fileId, effects);
+      const cacheBustedUrl = `${audioAPI.getDownloadUrl(fileId)}?t=${Date.now()}`;
+      setProcessedAudioUrl(cacheBustedUrl);
+      setSuccessMessage(response.message || 'Audio processed successfully!');
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to process audio';
       setError(`Processing failed: ${errorMessage}`);
@@ -68,6 +82,28 @@ function App() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleClearEffects = async () => {
+    handleEffectsChange([]);
+    setError('');
+
+    if (!fileId) {
+      setSuccessMessage('Effects cleared.');
+      return;
+    }
+
+    try {
+      await audioAPI.clearProcessed(fileId);
+    } catch (err: any) {
+      if (err.response?.status !== 404) {
+        const errorMessage = err.response?.data?.detail || err.message || 'Failed to clear processed audio';
+        setError(errorMessage);
+        return;
+      }
+    }
+
+    setSuccessMessage('Effects cleared. Processed audio removed.');
   };
 
   const handleDownload = () => {
@@ -87,16 +123,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Simple Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <h1 className="text-xl font-semibold text-gray-900">Pedalboard Audio Studio</h1>
         </div>
       </div>
 
-      {/* Main Container */}
       <div className="max-w-4xl mx-auto px-6 py-6">
-        {/* Messages */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm">
             {error}
@@ -108,9 +141,7 @@ function App() {
           </div>
         )}
 
-        {/* Two Column Layout */}
         <div className="flex gap-6">
-          {/* Left Side - Audio */}
           <div className="w-2/3 space-y-4">
             {!uploadedFile ? (
               <FileUpload onFileSelected={handleFileSelected} isProcessing={isProcessing} />
@@ -121,7 +152,6 @@ function App() {
                   <AudioPlayer audioFile={processedAudioUrl} title="Processed" />
                 )}
 
-                {/* Action Buttons */}
                 <div className="bg-white border border-gray-200 rounded p-3">
                   <div className="flex gap-2">
                     <button
@@ -151,12 +181,12 @@ function App() {
             )}
           </div>
 
-          {/* Right Side - Effects */}
           <div className="w-1/3">
             <EffectChain
               effects={effects}
               availableEffects={availableEffects}
-              onEffectsChange={setEffects}
+              onEffectsChange={handleEffectsChange}
+              onClearEffects={handleClearEffects}
             />
           </div>
         </div>
