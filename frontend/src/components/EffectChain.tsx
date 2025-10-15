@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react';
+import type { DragEvent } from 'react';
 import type { EffectConfig, AvailableEffects, EffectParam } from '../types';
 import EffectControl from './EffectControl';
 
@@ -32,6 +33,13 @@ const defaultValueForParam = (paramDef: EffectParam): any => {
   }
 };
 
+const isInteractiveElement = (element: HTMLElement | null): boolean => {
+  if (!element) return false;
+  return Boolean(
+    element.closest('input, select, textarea, button, [role="slider"], [contenteditable="true"]'),
+  );
+};
+
 export default function EffectChain({
   effects,
   availableEffects,
@@ -39,6 +47,8 @@ export default function EffectChain({
   onClearEffects,
 }: EffectChainProps) {
   const [selectedEffectType, setSelectedEffectType] = useState<string>('');
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [activeHoverId, setActiveHoverId] = useState<string | null>(null);
 
   const addEffect = () => {
     if (!selectedEffectType) return;
@@ -71,28 +81,64 @@ export default function EffectChain({
     onEffectsChange(effects.filter((_, i) => i !== index));
   };
 
-  const moveEffect = (index: number, direction: 'up' | 'down') => {
-    if (
-      (direction === 'up' && index === 0) ||
-      (direction === 'down' && index === effects.length - 1)
-    ) {
+  const handleDragStart = (id: string) => (event: DragEvent<HTMLDivElement>) => {
+    if (isInteractiveElement(event.target as HTMLElement)) {
+      event.preventDefault();
       return;
     }
 
-    const newEffects = [...effects];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    [newEffects[index], newEffects[targetIndex]] = [
-      newEffects[targetIndex],
-      newEffects[index],
-    ];
-    onEffectsChange(newEffects);
+    setDraggingId(id);
+    setActiveHoverId(id);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', id);
+
+    const ghost = document.createElement('div');
+    ghost.style.width = '0px';
+    ghost.style.height = '0px';
+    event.dataTransfer.setDragImage(ghost, 0, 0);
+  };
+
+  const handleDragOverCard = (targetId: string, targetIndex: number) => (event: DragEvent<HTMLDivElement>) => {
+    if (!draggingId) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+
+    if (draggingId === targetId) {
+      setActiveHoverId(targetId);
+      return;
+    }
+
+    const sourceIndex = effects.findIndex((effect) => effect.id === draggingId);
+    if (sourceIndex === -1 || sourceIndex === targetIndex) {
+      setActiveHoverId(targetId);
+      return;
+    }
+
+    const updated = [...effects];
+    const [moved] = updated.splice(sourceIndex, 1);
+    updated.splice(targetIndex, 0, moved);
+
+    onEffectsChange(updated);
+    setDraggingId(moved.id);
+    setActiveHoverId(targetId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setActiveHoverId(null);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setDraggingId(null);
+    setActiveHoverId(null);
   };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">Effects</h3>
 
-      <div className="mb-4">
+      <div className="mb-4 space-y-2">
         <select
           value={selectedEffectType}
           onChange={(e) => setSelectedEffectType(e.target.value)}
@@ -107,13 +153,22 @@ export default function EffectChain({
               </option>
             ))}
         </select>
-        <button
-          onClick={addEffect}
-          disabled={!selectedEffectType}
-          className="w-full mt-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-3 py-2 rounded text-sm font-medium disabled:cursor-not-allowed"
-        >
-          Add Effect
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={addEffect}
+            disabled={!selectedEffectType}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-3 py-2 rounded text-sm font-medium disabled:cursor-not-allowed"
+          >
+            Add Effect
+          </button>
+          <button
+            onClick={onClearEffects}
+            disabled={effects.length === 0}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 px-3 py-2 rounded text-sm font-medium border border-gray-200 disabled:cursor-not-allowed"
+          >
+            Clear All Effects
+          </button>
+        </div>
       </div>
 
       {effects.length === 0 ? (
@@ -121,54 +176,48 @@ export default function EffectChain({
           No effects added
         </div>
       ) : (
-        <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div className="space-y-2">
           {effects.map((effect, index) => {
             const definition = availableEffects[effect.type];
             if (!definition) return null;
 
+            const isDragging = draggingId === effect.id;
+            const isTarget = activeHoverId === effect.id && !isDragging;
+
             return (
-              <div key={effect.id} className="flex items-center gap-2">
-                <div className="flex flex-col">
-                  <button
-                    onClick={() => moveEffect(index, 'up')}
-                    disabled={index === 0}
-                    className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed p-0.5"
-                  >
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => moveEffect(index, 'down')}
-                    disabled={index === effects.length - 1}
-                    className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed p-0.5"
-                  >
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex-1">
-                  <EffectControl
-                    effect={effect}
-                    definition={definition}
-                    onUpdate={(updated) => updateEffect(index, updated)}
-                    onRemove={() => removeEffect(index)}
-                  />
-                </div>
+              <div
+                key={effect.id}
+                draggable
+                onDragStart={handleDragStart(effect.id)}
+                onDragOver={handleDragOverCard(effect.id, index)}
+                onDragEnter={handleDragOverCard(effect.id, index)}
+                onDrop={handleDrop}
+                onDragEnd={handleDragEnd}
+                className={`rounded border transition-shadow ${
+                  isDragging
+                    ? 'border-blue-400 bg-blue-50 shadow-md'
+                    : isTarget
+                    ? 'border-blue-200 bg-blue-50'
+                    : 'border-transparent bg-white'
+                }`}
+              >
+                <EffectControl
+                  effect={effect}
+                  definition={definition}
+                  onUpdate={(updated) => updateEffect(index, updated)}
+                  onRemove={() => removeEffect(index)}
+                />
               </div>
             );
           })}
         </div>
       )}
 
-      <button
-        onClick={onClearEffects}
-        disabled={effects.length === 0}
-        className="w-full mt-4 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 px-3 py-2 rounded text-sm font-medium border border-gray-200 disabled:cursor-not-allowed"
-      >
-        Clear All Effects
-      </button>
+      {effects.length > 0 && (
+        <p className="mt-2 text-[11px] text-gray-400">
+          Drag any effect card to change its position. The chain updates as you move.
+        </p>
+      )}
     </div>
   );
 }

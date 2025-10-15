@@ -129,7 +129,7 @@ function App() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-6">
+      <div className="max-w-6xl mx-auto px-6 py-6">
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm">
             {error}
@@ -142,6 +142,15 @@ function App() {
         )}
 
         <div className="flex gap-6">
+          <div className="w-1/3">
+            <EffectChain
+              effects={effects}
+              availableEffects={availableEffects}
+              onEffectsChange={handleEffectsChange}
+              onClearEffects={handleClearEffects}
+            />
+          </div>
+
           <div className="w-2/3 space-y-4">
             {!uploadedFile ? (
               <FileUpload onFileSelected={handleFileSelected} isProcessing={isProcessing} />
@@ -179,15 +188,6 @@ function App() {
                 </div>
               </>
             )}
-          </div>
-
-          <div className="w-1/3">
-            <EffectChain
-              effects={effects}
-              availableEffects={availableEffects}
-              onEffectsChange={handleEffectsChange}
-              onClearEffects={handleClearEffects}
-            />
           </div>
         </div>
       </div>
