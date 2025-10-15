@@ -12,8 +12,8 @@ from pedalboard import (
     Chorus,
     Phaser,
     Bitcrush,
-    Highpass,
-    Lowpass,
+    HighpassFilter,
+    LowpassFilter,
     LadderFilter,
     HighShelfFilter,
     LowShelfFilter,
@@ -117,13 +117,13 @@ def create_effect(effect_type: str, params: Dict[str, Any]):
 
     # Highpass Filter - attenuate low frequencies
     elif effect_type == "highpass":
-        return Highpass(
+        return HighpassFilter(
             cutoff_frequency_hz=params.get("cutoff_frequency_hz", 50.0)
         )
 
     # Lowpass Filter - attenuate high frequencies
     elif effect_type == "lowpass":
-        return Lowpass(
+        return LowpassFilter(
             cutoff_frequency_hz=params.get("cutoff_frequency_hz", 5000.0)
         )
 
@@ -193,6 +193,11 @@ def apply_effects_chain(input_path: str, output_path: str, effects: List[Dict[st
         output_path: Path to save processed audio
         effects: List of effect configurations, each with 'type' and 'params'
     """
+    import os
+
+    # Validate input file exists
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"Input file not found: {input_path}")
 
     # Create effect instances
     effect_chain = []
@@ -200,19 +205,25 @@ def apply_effects_chain(input_path: str, output_path: str, effects: List[Dict[st
         effect = create_effect(effect_config["type"], effect_config["params"])
         effect_chain.append(effect)
 
-    # Create Pedalboard with all effects
+    # Create Pedalboard with all effects (empty chain is valid - it will just copy the audio)
     board = Pedalboard(effect_chain)
 
     # Read input audio file
     with AudioFile(input_path) as f:
         audio = f.read(f.frames)
         sample_rate = f.samplerate
+        num_channels = audio.shape[0] if len(audio.shape) > 1 else 1
 
     # Apply effects
     processed_audio = board(audio, sample_rate)
 
+    # Ensure output directory exists
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
     # Write output audio file
-    with AudioFile(output_path, 'w', sample_rate, processed_audio.shape[0]) as f:
+    with AudioFile(output_path, 'w', sample_rate, num_channels) as f:
         f.write(processed_audio)
 
 

@@ -56,7 +56,7 @@ function App() {
     setSuccessMessage('');
 
     try {
-      const response = await audioAPI.processAudio(fileId, effects);
+      await audioAPI.processAudio(fileId, effects);
       const downloadUrl = audioAPI.getDownloadUrl(fileId);
       setProcessedAudioUrl(downloadUrl);
       setSuccessMessage('Audio processed successfully!');
@@ -84,132 +84,79 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Pedalboard Audio Studio
-          </h1>
-          <p className="text-violet-100">
-            Upload audio files and apply professional effects in real-time
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Simple Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <h1 className="text-xl font-semibold text-gray-900">Pedalboard Audio Studio</h1>
         </div>
+      </div>
 
+      {/* Main Container */}
+      <div className="max-w-4xl mx-auto px-6 py-6">
         {/* Messages */}
         {error && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm">
             {error}
           </div>
         )}
         {successMessage && (
-          <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded text-sm">
             {successMessage}
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Upload & Audio Players */}
-          <div className="space-y-6">
-            {/* File Upload */}
+        {/* Two Column Layout */}
+        <div className="flex gap-6">
+          {/* Left Side - Audio */}
+          <div className="w-2/3 space-y-4">
             {!uploadedFile ? (
-              <FileUpload
-                onFileSelected={handleFileSelected}
-                isProcessing={isProcessing}
-              />
+              <FileUpload onFileSelected={handleFileSelected} isProcessing={isProcessing} />
             ) : (
-              <div className="space-y-4">
-                {/* Original Audio */}
-                <AudioPlayer audioFile={uploadedFile} title="Original Audio" />
-
-                {/* Processed Audio */}
+              <>
+                <AudioPlayer audioFile={uploadedFile} title="Original" />
                 {processedAudioUrl && (
-                  <AudioPlayer
-                    audioFile={processedAudioUrl}
-                    title="Processed Audio"
-                  />
+                  <AudioPlayer audioFile={processedAudioUrl} title="Processed" />
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleProcess}
-                    disabled={isProcessing || effects.length === 0}
-                    className="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 px-6 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isProcessing ? (
-                      <span className="flex items-center justify-center">
-                        <svg
-                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Processing...
-                      </span>
-                    ) : (
-                      'Process Audio'
-                    )}
-                  </button>
-
-                  {processedAudioUrl && (
+                <div className="bg-white border border-gray-200 rounded p-3">
+                  <div className="flex gap-2">
                     <button
-                      onClick={handleDownload}
-                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                      onClick={handleProcess}
+                      disabled={isProcessing || effects.length === 0}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-3 py-2 rounded text-sm font-medium disabled:cursor-not-allowed"
                     >
-                      Download
+                      {isProcessing ? 'Processing...' : 'Process Audio'}
                     </button>
-                  )}
-
-                  <button
-                    onClick={handleReset}
-                    className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-                  >
-                    Reset
-                  </button>
+                    {processedAudioUrl && (
+                      <button
+                        onClick={handleDownload}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-medium"
+                      >
+                        Download
+                      </button>
+                    )}
+                    <button
+                      onClick={handleReset}
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm font-medium"
+                    >
+                      Reset
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
 
-          {/* Right Column - Effect Chain */}
-          <div>
+          {/* Right Side - Effects */}
+          <div className="w-1/3">
             <EffectChain
               effects={effects}
               availableEffects={availableEffects}
               onEffectsChange={setEffects}
             />
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-12 text-center text-violet-100 text-sm">
-          <p>
-            Powered by{' '}
-            <a
-              href="https://github.com/spotify/pedalboard"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-white"
-            >
-              Spotify Pedalboard
-            </a>
-          </p>
         </div>
       </div>
     </div>

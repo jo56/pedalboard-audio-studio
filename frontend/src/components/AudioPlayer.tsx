@@ -19,14 +19,14 @@ export default function AudioPlayer({ audioFile, title }: AudioPlayerProps) {
     // Create WaveSurfer instance
     const wavesurfer = WaveSurfer.create({
       container: waveformRef.current,
-      waveColor: '#a78bfa',
-      progressColor: '#7c3aed',
-      cursorColor: '#7c3aed',
+      waveColor: '#d1d5db',
+      progressColor: '#2563eb',
+      cursorColor: '#1d4ed8',
       barWidth: 2,
-      barRadius: 3,
+      barRadius: 2,
       cursorWidth: 1,
-      height: 80,
-      barGap: 2,
+      height: 60,
+      barGap: 1,
     });
 
     wavesurferRef.current = wavesurfer;
@@ -69,33 +69,22 @@ export default function AudioPlayer({ audioFile, title }: AudioPlayerProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-lg">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-      </div>
-
-      <div ref={waveformRef} className="mb-4" />
-
-      <div className="flex items-center justify-between">
-        <button
-          onClick={togglePlayPause}
-          className="bg-violet-600 hover:bg-violet-700 text-white rounded-full p-3 transition-colors"
-        >
-          {isPlaying ? (
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-            </svg>
-          ) : (
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          )}
-        </button>
-
-        <div className="text-sm text-gray-600">
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+        <span className="text-xs text-gray-500">
           {formatTime(currentTime)} / {formatTime(duration)}
-        </div>
+        </span>
       </div>
+
+      <div ref={waveformRef} className="mb-3" />
+
+      <button
+        onClick={togglePlayPause}
+        className="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-2 text-sm font-medium"
+      >
+        {isPlaying ? 'Pause' : 'Play'}
+      </button>
     </div>
   );
 }

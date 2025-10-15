@@ -98,20 +98,36 @@ async def process_audio(request: ProcessRequest):
     input_path = session["file_path"]
     extension = session["extension"]
 
+    # Verify input file exists
+    if not os.path.exists(input_path):
+        raise HTTPException(status_code=404, detail=f"Input file no longer exists: {input_path}")
+
     # Generate output path
     output_filename = f"{file_id}_processed{extension}"
     output_path = PROCESSED_DIR / output_filename
 
     try:
+        # Convert effects to dict format
+        effects_list = [{"type": e.type, "params": e.params} for e in request.effects]
+        print(f"Processing audio with {len(effects_list)} effects")
+        print(f"Input: {input_path}")
+        print(f"Output: {output_path}")
+
         # Apply effects chain
         apply_effects_chain(
             input_path=input_path,
             output_path=str(output_path),
-            effects=request.effects
+            effects=effects_list
         )
+
+        # Verify output file was created
+        if not os.path.exists(str(output_path)):
+            raise Exception("Output file was not created successfully")
 
         # Store processed file info
         file_sessions[file_id]["processed_path"] = str(output_path)
+
+        print(f"Processing completed successfully")
 
         return {
             "file_id": file_id,
@@ -121,6 +137,10 @@ async def process_audio(request: ProcessRequest):
         }
 
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error processing audio: {str(e)}")
+        print(error_details)
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 @app.get("/download/{file_id}")

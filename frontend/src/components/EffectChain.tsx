@@ -65,90 +65,75 @@ export default function EffectChain({
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-lg">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">Effect Chain</h3>
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <h3 className="text-sm font-semibold text-gray-900 mb-4">Effects</h3>
 
-      {/* Add Effect Section */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      {/* Add Effect */}
+      <div className="mb-4">
+        <select
+          value={selectedEffectType}
+          onChange={(e) => setSelectedEffectType(e.target.value)}
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select effect...</option>
+          {Object.entries(availableEffects)
+            .sort(([, a], [, b]) => a.name.localeCompare(b.name))
+            .map(([key, effect]) => (
+              <option key={key} value={key}>
+                {effect.name}
+              </option>
+            ))}
+        </select>
+        <button
+          onClick={addEffect}
+          disabled={!selectedEffectType}
+          className="w-full mt-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-3 py-2 rounded text-sm font-medium disabled:cursor-not-allowed"
+        >
           Add Effect
-        </label>
-        <div className="flex gap-2">
-          <select
-            value={selectedEffectType}
-            onChange={(e) => setSelectedEffectType(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-          >
-            <option value="">Select an effect...</option>
-            {Object.entries(availableEffects)
-              .sort(([, a], [, b]) => a.name.localeCompare(b.name))
-              .map(([key, effect]) => (
-                <option key={key} value={key}>
-                  {effect.name}
-                </option>
-              ))}
-          </select>
-          <button
-            onClick={addEffect}
-            disabled={!selectedEffectType}
-            className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            Add
-          </button>
-        </div>
+        </button>
       </div>
 
-      {/* Effect Chain */}
+      {/* Effect List */}
       {effects.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <p>No effects added yet. Add an effect to get started!</p>
+        <div className="text-center py-8 text-gray-400 text-sm">
+          No effects added
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2 max-h-96 overflow-y-auto">
           {effects.map((effect, index) => {
             const definition = availableEffects[effect.type];
             if (!definition) return null;
 
             return (
-              <div key={effect.id} className="relative">
-                {/* Reorder buttons */}
-                <div className="absolute -left-12 top-1/2 -translate-y-1/2 flex flex-col gap-1">
+              <div key={effect.id} className="flex items-center gap-2">
+                <div className="flex flex-col">
                   <button
                     onClick={() => moveEffect(index, 'up')}
                     disabled={index === 0}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                    title="Move up"
+                    className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed p-0.5"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
-                        clipRule="evenodd"
-                      />
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
                   <button
                     onClick={() => moveEffect(index, 'down')}
                     disabled={index === effects.length - 1}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                    title="Move down"
+                    className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed p-0.5"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
                 </div>
-
-                <EffectControl
-                  effect={effect}
-                  definition={definition}
-                  onUpdate={(updated) => updateEffect(index, updated)}
-                  onRemove={() => removeEffect(index)}
-                />
+                <div className="flex-1">
+                  <EffectControl
+                    effect={effect}
+                    definition={definition}
+                    onUpdate={(updated) => updateEffect(index, updated)}
+                    onRemove={() => removeEffect(index)}
+                  />
+                </div>
               </div>
             );
           })}

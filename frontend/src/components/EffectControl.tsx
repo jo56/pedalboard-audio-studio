@@ -24,36 +24,31 @@ export default function EffectControl({
   };
 
   return (
-    <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-gray-50 border border-gray-200 rounded p-3">
+      <div className="flex items-start justify-between mb-2">
         <div>
-          <h4 className="font-semibold text-gray-800">{definition.name}</h4>
+          <h4 className="text-xs font-semibold text-gray-900">{definition.name}</h4>
           <p className="text-xs text-gray-500">{definition.description}</p>
         </div>
         <button
           onClick={onRemove}
-          className="text-red-500 hover:text-red-700 transition-colors"
-          title="Remove effect"
+          className="text-gray-400 hover:text-red-600 ml-2"
+          title="Remove"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {Object.entries(definition.params).map(([paramName, paramDef]) => (
           <div key={paramName}>
             <div className="flex justify-between items-center mb-1">
-              <label className="text-sm font-medium text-gray-700 capitalize">
+              <label className="text-xs text-gray-600 capitalize">
                 {paramName.replace(/_/g, ' ')}
               </label>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-900 font-mono">
                 {effect.params[paramName] !== undefined
                   ? typeof effect.params[paramName] === 'number'
                     ? effect.params[paramName].toFixed(2)
@@ -63,11 +58,10 @@ export default function EffectControl({
             </div>
 
             {paramDef.options ? (
-              // Dropdown for options
               <select
                 value={effect.params[paramName] || paramDef.default}
                 onChange={(e) => handleParamChange(paramName, e.target.value)}
-                className="w-full px-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {paramDef.options.map((option) => (
                   <option key={option} value={option}>
@@ -76,7 +70,6 @@ export default function EffectControl({
                 ))}
               </select>
             ) : (
-              // Slider for numeric values
               <input
                 type="range"
                 min={paramDef.min}
@@ -84,7 +77,7 @@ export default function EffectControl({
                 step={(paramDef.max! - paramDef.min!) / 100}
                 value={effect.params[paramName] ?? paramDef.default}
                 onChange={(e) => handleParamChange(paramName, parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-violet-600"
+                className="w-full h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-600"
               />
             )}
           </div>
