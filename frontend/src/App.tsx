@@ -116,12 +116,7 @@ function App() {
       return;
     }
 
-    const payload = {
-      format: 'pedalboard-effect-chain',
-      schema_version: 1,
-      generated_at: new Date().toISOString(),
-      effects: effects.map(({ type, params }) => ({ type, params })),
-    };
+    const payload = effects.map(({ type, params }) => ({ type, params }));
 
     try {
       const blob = new Blob([JSON.stringify(payload, null, 2)], {
