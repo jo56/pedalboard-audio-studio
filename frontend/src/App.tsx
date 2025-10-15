@@ -1,9 +1,13 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
+import type { ChangeEvent } from 'react';
 import FileUpload from './components/FileUpload';
 import AudioPlayer from './components/AudioPlayer';
 import EffectChain from './components/EffectChain';
 import { audioAPI } from './api';
 import type { AvailableEffects, EffectConfig } from './types';
+
+const createEffectId = (type: string, index: number) =>
+  `${type}-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`;
 
 function App() {
   const [availableEffects, setAvailableEffects] = useState<AvailableEffects>({});
@@ -14,6 +18,7 @@ function App() {
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const loadEffects = async () => {
@@ -105,6 +110,96 @@ function App() {
     setSuccessMessage('Effects cleared. Processed audio removed.');
   };
 
+  const handleExportEffects = () => {
+    if (effects.length === 0) {
+      setError('Add at least one effect before exporting settings.');
+      return;
+    }
+
+    const payload = {
+      format: 'pedalboard-effect-chain',
+      schema_version: 1,
+      generated_at: new Date().toISOString(),
+      effects: effects.map(({ type, params }) => ({ type, params })),
+    };
+
+    try {
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `pedalboard-effects-${timestamp}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+
+      setSuccessMessage('Effect settings exported successfully.');
+      setError('');
+    } catch (err) {
+      console.error('Export failed:', err);
+      setError('Failed to export effect settings.');
+    }
+  };
+
+  const handleImportClick = () => {
+    setError('');
+    importInputRef.current?.click();
+  };
+
+  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const importedEffectsRaw = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.effects)
+        ? data.effects
+        : null;
+
+      if (!importedEffectsRaw || importedEffectsRaw.length === 0) {
+        throw new Error('No effects found in file.');
+      }
+
+      const normalized: EffectConfig[] = [];
+      importedEffectsRaw.forEach((entry: any, index: number) => {
+        if (!entry || typeof entry !== 'object' || !entry.type) {
+          throw new Error('Invalid effect entry detected.');
+        }
+        const type = String(entry.type);
+        const params = entry.params && typeof entry.params === 'object' ? entry.params : {};
+
+        if (!availableEffects[type]) {
+          throw new Error(`Unknown effect type: ${type}`);
+        }
+
+        normalized.push({
+          id: createEffectId(type, index),
+          type,
+          params,
+        });
+      });
+
+      setEffects(normalized);
+      invalidateProcessedAudio();
+      setSuccessMessage('Effect settings imported successfully.');
+      setError('');
+    } catch (err: any) {
+      console.error('Import failed:', err);
+      setError(`Failed to import effect settings: ${err.message || err}`);
+    } finally {
+      event.target.value = '';
+    }
+  };
+
   const handleDownload = () => {
     if (processedAudioUrl) {
       window.open(processedAudioUrl, '_blank');
@@ -146,6 +241,8 @@ function App() {
               availableEffects={availableEffects}
               onEffectsChange={handleEffectsChange}
               onClearEffects={handleClearEffects}
+              onExportEffects={handleExportEffects}
+              onImportEffects={handleImportClick}
             />
           </div>
 
@@ -189,6 +286,14 @@ function App() {
           </div>
         </div>
       </div>
+
+      <input
+        ref={importInputRef}
+        type="file"
+        accept="application/json"
+        className="hidden"
+        onChange={handleImportFile}
+      />
     </div>
   );
 }

@@ -8,6 +8,8 @@ interface EffectChainProps {
   availableEffects: AvailableEffects;
   onEffectsChange: (effects: EffectConfig[]) => void;
   onClearEffects: () => void;
+  onExportEffects: () => void;
+  onImportEffects: () => void;
 }
 
 const defaultValueForParam = (paramDef: EffectParam): any => {
@@ -45,6 +47,8 @@ export default function EffectChain({
   availableEffects,
   onEffectsChange,
   onClearEffects,
+  onExportEffects,
+  onImportEffects,
 }: EffectChainProps) {
   const [selectedEffectType, setSelectedEffectType] = useState<string>('');
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -62,7 +66,7 @@ export default function EffectChain({
     });
 
     const newEffect: EffectConfig = {
-      id: `${selectedEffectType}-${Date.now()}`,
+      id: `${selectedEffectType}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       type: selectedEffectType,
       params,
     };
@@ -98,7 +102,9 @@ export default function EffectChain({
     event.dataTransfer.setDragImage(ghost, 0, 0);
   };
 
-  const handleDragOverCard = (targetId: string, targetIndex: number) => (event: DragEvent<HTMLDivElement>) => {
+  const handleDragOverCard = (targetId: string, targetIndex: number) => (
+    event: DragEvent<HTMLDivElement>,
+  ) => {
     if (!draggingId) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -167,6 +173,23 @@ export default function EffectChain({
             className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 px-3 py-2 rounded text-sm font-medium border border-gray-200 disabled:cursor-not-allowed"
           >
             Clear All Effects
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={onImportEffects}
+            className="flex-1 bg-white hover:bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium border border-gray-200"
+            type="button"
+          >
+            Import Settings
+          </button>
+          <button
+            onClick={onExportEffects}
+            disabled={effects.length === 0}
+            className="flex-1 bg-white hover:bg-gray-100 disabled:bg-gray-100 disabled:text-gray-400 text-gray-700 px-3 py-2 rounded text-sm font-medium border border-gray-200 disabled:cursor-not-allowed"
+            type="button"
+          >
+            Export Settings
           </button>
         </div>
       </div>
