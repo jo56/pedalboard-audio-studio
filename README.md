@@ -1,195 +1,194 @@
-# Pedalboard Audio Studio
+﻿# Pedalboard Audio Studio
 
-A fullstack web application that provides a beautiful UI for manipulating audio files using [Spotify's Pedalboard](https://github.com/spotify/pedalboard) library. Upload audio files and apply professional-grade effects like reverb, delay, compression, distortion, and more - all through an intuitive web interface.
+A fullstack web application that provides a beautiful UI for manipulating audio files using [Spotify's Pedalboard](https://github.com/spotify/pedalboard) library. Upload audio files, design complex pedal chains, host VST3 plugins, and save reusable presets.
 
 ## Features
 
-- **Drag & Drop File Upload** - Easy audio file upload with support for MP3, WAV, FLAC, OGG, and M4A formats
-- **Visual Waveform Display** - Real-time waveform visualization with playback controls
-- **18+ Audio Effects** - Including:
-  - Reverb, Delay, Chorus, Phaser
-  - Compressor, Limiter, Gain
-  - Distortion, Bitcrush, Clipping
-  - Filters (Highpass, Lowpass, Ladder, Shelf)
-  - Pitch Shift, MP3 Compressor, Resample
-- **Effect Chain Builder** - Add, remove, and reorder effects with ease
-- **Real-time Parameter Control** - Adjust effect parameters with intuitive sliders
-- **A/B Comparison** - Compare original and processed audio side-by-side
-- **Download Processed Audio** - Save your processed audio files
+- **Drag & Drop File Upload** – MP3, WAV, FLAC, OGG, and M4A support
+- **Visual Waveform Display** – Real-time waveform visualization with playback controls
+- **Comprehensive Pedalboard Coverage** – 24 native effects including dynamics, filters, modulation, convolution IRs, GSM codec emulation, and more
+- **External VST3 Hosting** – Drop compatible plugins in `backend/plugins` and use them in any chain
+- **Effect Chain Builder** – Add, remove, and reorder effects with ease
+- **Typed Parameter Controls** – Sliders, toggles, selects, and text inputs adjust parameters with live feedback
+- **Preset Management** – Save, list, download, and reuse effect chains through the API
+- **Download Processed Audio** – Export processed audio with a single click
 
 ## Tech Stack
 
 ### Backend
-- **Python 3.8+**
-- **FastAPI** - Modern, fast web framework
-- **Pedalboard** - Spotify's audio effects library
-- **Uvicorn** - ASGI server
+- **Python 3.10+**
+- **FastAPI** – Modern, fast web framework
+- **Pedalboard 0.9.8** – Spotify's audio effects library
+- **Uvicorn** – ASGI server
 
 ### Frontend
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **Tailwind CSS** - Styling
-- **WaveSurfer.js** - Waveform visualization
-- **Axios** - HTTP client
-- **React Dropzone** - File upload
+- **React 18** with **TypeScript**
+- **Vite** build tooling
+- **Tailwind CSS** styling
+- **WaveSurfer.js** for waveform rendering
+- **Axios** HTTP client
 
 ## Project Structure
 
 ```
 pedalboard-test/
-├── backend/
-│   ├── main.py              # FastAPI server
-│   ├── effects.py           # Effect processing logic
-│   ├── requirements.txt     # Python dependencies
-│   ├── uploads/             # Uploaded files (created at runtime)
-│   └── processed/           # Processed files (created at runtime)
-├── frontend/
-│   ├── src/
-│   │   ├── components/      # React components
-│   │   │   ├── FileUpload.tsx
-│   │   │   ├── AudioPlayer.tsx
-│   │   │   ├── EffectChain.tsx
-│   │   │   └── EffectControl.tsx
-│   │   ├── api.ts           # API client
-│   │   ├── types.ts         # TypeScript types
-│   │   ├── App.tsx          # Main app component
-│   │   └── index.css        # Global styles
-│   ├── package.json
-│   └── vite.config.ts
-└── README.md
+├─ backend/
+│  ├─ main.py             # FastAPI server
+│  ├─ effects.py          # Effect registry and processing
+│  ├─ presets.py          # Preset persistence helpers
+│  ├─ requirements.txt    # Python dependencies
+│  ├─ uploads/            # Uploaded audio (runtime)
+│  ├─ processed/          # Processed audio (runtime)
+│  ├─ impulses/           # Impulse responses for convolution effects
+│  └─ plugins/            # Optional VST3 binaries
+├─ frontend/
+│  ├─ src/
+│  │  ├─ components/
+│  │  ├─ api.ts
+│  │  ├─ types.ts
+│  │  └─ App.tsx
+│  ├─ package.json
+│  └─ vite.config.ts
+└─ README.md
 ```
 
 ## Setup Instructions
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - Node.js 16 or higher
-- npm or yarn
+- npm (or yarn/pnpm)
 
 ### Backend Setup
 
-1. Navigate to the backend directory:
 ```bash
 cd backend
-```
-
-2. Create a virtual environment:
-```bash
 python -m venv venv
-```
-
-3. Activate the virtual environment:
-- Windows:
-  ```bash
-  venv\Scripts\activate
-  ```
-- macOS/Linux:
-  ```bash
-  source venv/bin/activate
-  ```
-
-4. Install dependencies:
-```bash
+venv\\Scripts\\activate  # Windows
+# source venv/bin/activate # macOS/Linux
 pip install -r requirements.txt
-```
-
-5. Start the FastAPI server:
-```bash
 python main.py
 ```
 
-The backend will be available at `http://localhost:8000`
+The backend will be available at `http://localhost:8000`.
 
 ### Frontend Setup
 
-1. Navigate to the frontend directory:
 ```bash
 cd frontend
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Start the development server:
-```bash
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:5173`
+The frontend will be available at `http://localhost:5173`.
 
 ## Usage
 
-1. **Upload Audio**: Drag and drop an audio file or click to browse
-2. **Add Effects**: Select effects from the dropdown and click "Add"
-3. **Adjust Parameters**: Use sliders to fine-tune effect parameters
-4. **Reorder Effects**: Use up/down arrows to change the effect chain order
-5. **Process Audio**: Click "Process Audio" to apply the effect chain
-6. **Listen & Compare**: Play both original and processed audio
-7. **Download**: Save the processed audio file
+1. **Upload Audio** – Drag and drop an audio file or click to browse
+2. **Add Effects** – Choose effects from the dropdown and click “Add”
+3. **Adjust Parameters** – Use sliders, inputs, or selectors per parameter type
+4. **Reorder Effects** – Use the up/down arrows to tweak the chain order
+5. **Process Audio** – Click “Process Audio” to render the effect chain
+6. **Compare & Download** – Audition original vs processed audio and export
+7. **Save Presets (API)** – POST to `/presets` with the current chain to reuse later
+
+### Working with Impulse Responses & VST3 Plugins
+
+- Place impulse responses (WAV/AIFF) in `backend/impulses`. They will appear as options for the Convolution effect.
+- Place platform-specific `.vst3` bundles inside `backend/plugins` (or provide absolute paths) to host third-party effects.
 
 ## Available Effects
 
 | Effect | Description | Key Parameters |
 |--------|-------------|----------------|
-| Reverb | Adds spatial ambience | Room Size, Damping, Wet/Dry Level |
-| Delay | Creates echo effect | Delay Time, Feedback, Mix |
-| Compressor | Reduces dynamic range | Threshold, Ratio, Attack, Release |
-| Limiter | Prevents volume spikes | Threshold, Release |
-| Gain | Adjusts volume | Gain (dB) |
-| Distortion | Harmonic distortion | Drive |
-| Chorus | Modulated delay for thickness | Rate, Depth, Feedback |
-| Phaser | Sweeping phase shift | Rate, Depth, Frequency |
-| Bitcrush | Lo-fi digital reduction | Bit Depth |
-| Highpass | Removes low frequencies | Cutoff Frequency |
-| Lowpass | Removes high frequencies | Cutoff Frequency |
-| Ladder Filter | Moog-style filter | Mode, Cutoff, Resonance |
-| High/Low Shelf | Boost/cut frequencies | Cutoff, Gain, Q |
-| Pitch Shift | Changes pitch | Semitones |
-| Clipping | Hard distortion | Threshold |
-| MP3 Compressor | Adds MP3 artifacts | VBR Quality |
-| Resample | Changes sample rate | Target Sample Rate |
+| Reverb | Adds spatial ambience | room_size, damping, wet_level |
+| Delay | Creates echoes | delay_seconds, feedback, mix |
+| Compressor | Controls dynamic range | threshold_db, ratio, attack_ms, release_ms |
+| Limiter | Prevents peaks | threshold_db, release_ms |
+| Gain | Adjusts level | gain_db |
+| Distortion | Harmonic saturation | drive_db |
+| Chorus | Modulated thickening | rate_hz, depth, mix |
+| Phaser | Sweeping phase cancellations | rate_hz, depth, centre_frequency_hz |
+| Bitcrush | Lo-fi bit reduction | bit_depth |
+| Highpass | Removes lows | cutoff_frequency_hz |
+| Lowpass | Removes highs | cutoff_frequency_hz |
+| Ladder Filter | Moog-style filter | mode, cutoff_hz, resonance, drive |
+| High/Low Shelf | Tone shaping | cutoff_frequency_hz, gain_db, q |
+| Peak Filter | EQ boost/cut | cutoff_frequency_hz, gain_db, q |
+| Pitch Shift | Alters pitch | semitones |
+| Clipping | Hard clipping | threshold_db |
+| MP3 Compressor | Codec artifacts | vbr_quality |
+| Resample | Aliasing via resampling | target_sample_rate, quality |
+| Noise Gate | Suppresses noise | threshold_db, ratio, attack_ms, release_ms |
+| GSM Full Rate | 2G cellular compression | quality |
+| Convolution | IR-based filtering | impulse_response, mix |
+| Invert | Flips polarity | — |
+| VST3 Plugin | Host external plugin | plugin_path, plugin_name, initialization_timeout, parameter_values |
+
+## Preset API
+
+Effect presets are stored as JSON in `backend/presets`. Endpoints:
+
+- `GET /presets` – List stored presets
+- `POST /presets` – Create a preset from an effect chain
+- `GET /presets/{preset_id}` – Retrieve full preset payload
+- `GET /presets/{preset_id}/download` – Download preset JSON
+- `DELETE /presets/{preset_id}` – Remove a preset
+- `POST /process` – Accepts either an `effects` array or a `preset_id`
+
+Example preset creation payload:
+
+```json
+{
+  "name": "Bright Guitar",
+  "description": "Sparkly chorus and delay",
+  "effects": [
+    { "type": "chorus", "params": { "depth": 0.35, "mix": 0.5 } },
+    { "type": "delay", "params": { "delay_seconds": 0.42, "feedback": 0.3, "mix": 0.4 } }
+  ]
+}
+```
 
 ## API Endpoints
 
-- `GET /` - Health check
-- `GET /effects` - Get available effects and parameters
-- `POST /upload` - Upload audio file
-- `POST /process` - Process audio with effect chain
-- `GET /download/{file_id}` - Download processed audio
-- `DELETE /cleanup/{file_id}` - Clean up files
+- `GET /` – Health check
+- `GET /effects` – Available effects with metadata and parameter types
+- `GET /presets` – List presets
+- `POST /presets` – Save effect preset
+- `GET /presets/{preset_id}` – Fetch preset details
+- `GET /presets/{preset_id}/download` – Download preset JSON
+- `DELETE /presets/{preset_id}` – Delete preset
+- `POST /upload` – Upload audio file
+- `POST /process` – Process audio with inline `effects` or `preset_id`
+- `GET /download/{file_id}` – Download processed audio
+- `DELETE /cleanup/{file_id}` – Remove uploaded/processed files
 
-## Development
+## Development Notes
 
-### Backend Development
-
-The backend uses FastAPI with automatic API documentation:
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
+- Frontend uses Vite HMR for instant feedback
 
-### Frontend Development
+### Testing / Validation
 
-Hot module replacement is enabled. Changes to components will automatically reload.
+- Frontend production build: `npm run build`
+- Backend modules compile via `python -m compileall backend/*.py`
 
 ## Future Enhancements
 
-- [ ] Preset system (save/load effect chains)
-- [ ] Real-time audio preview while adjusting parameters
-- [ ] Batch processing multiple files
-- [ ] VST plugin support
-- [ ] Export to multiple formats
-- [ ] User authentication
-- [ ] Cloud storage integration
-- [ ] Collaborative editing
+- [ ] UI for managing presets from the web app
+- [ ] Real-time audio preview while editing parameters
+- [ ] Batch processing for multiple files
+- [ ] Expanded plugin metadata introspection for VST3 hosts
+- [ ] Export to multiple audio formats
+- [ ] Optional user authentication and cloud storage
 
 ## License
 
-This project uses Spotify's Pedalboard library. Please refer to the [Pedalboard license](https://github.com/spotify/pedalboard/blob/master/LICENSE) for details.
+This project uses Spotify's Pedalboard library. Refer to the [Pedalboard license](https://github.com/spotify/pedalboard/blob/master/LICENSE) for details.
 
 ## Acknowledgments
 
-- [Spotify Pedalboard](https://github.com/spotify/pedalboard) - The amazing audio processing library that powers this app
-- Built with FastAPI, React, and modern web technologies
+- [Spotify Pedalboard](https://github.com/spotify/pedalboard) — core DSP engine
+- Thanks to the FastAPI and React communities for great tooling

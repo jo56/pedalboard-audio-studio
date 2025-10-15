@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { EffectConfig, AvailableEffects } from '../types';
+﻿import { useState } from 'react';
+import type { EffectConfig, AvailableEffects, EffectParam } from '../types';
 import EffectControl from './EffectControl';
 
 interface EffectChainProps {
@@ -7,6 +7,29 @@ interface EffectChainProps {
   availableEffects: AvailableEffects;
   onEffectsChange: (effects: EffectConfig[]) => void;
 }
+
+const defaultValueForParam = (paramDef: EffectParam): any => {
+  if (paramDef.default !== null && paramDef.default !== undefined) {
+    return paramDef.default;
+  }
+
+  switch (paramDef.type) {
+    case 'bool':
+      return false;
+    case 'dict':
+      return {};
+    case 'float':
+    case 'int':
+      return paramDef.min ?? 0;
+    case 'enum':
+    case 'file':
+      return paramDef.options?.[0] ?? '';
+    case 'string':
+      return '';
+    default:
+      return null;
+  }
+};
 
 export default function EffectChain({
   effects,
@@ -21,10 +44,9 @@ export default function EffectChain({
     const effectDef = availableEffects[selectedEffectType];
     if (!effectDef) return;
 
-    // Create params object with default values
     const params: Record<string, any> = {};
     Object.entries(effectDef.params).forEach(([key, paramDef]) => {
-      params[key] = paramDef.default;
+      params[key] = defaultValueForParam(paramDef);
     });
 
     const newEffect: EffectConfig = {
@@ -68,7 +90,6 @@ export default function EffectChain({
     <div className="bg-white border border-gray-200 rounded-lg p-4">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">Effects</h3>
 
-      {/* Add Effect */}
       <div className="mb-4">
         <select
           value={selectedEffectType}
@@ -93,7 +114,6 @@ export default function EffectChain({
         </button>
       </div>
 
-      {/* Effect List */}
       {effects.length === 0 ? (
         <div className="text-center py-8 text-gray-400 text-sm">
           No effects added
