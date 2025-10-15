@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Audio files
+backend/uploads/
+backend/processed/
+
+# Node
+node_modules/
+dist/
+.npm
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+.claude/
