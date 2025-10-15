@@ -47,7 +47,6 @@ function App() {
     setSuccessMessage('');
     setUploadedFile(file);
     setProcessedAudioUrl('');
-    setEffects([]);
 
     try {
       const response = await audioAPI.uploadFile(file);
@@ -115,7 +114,6 @@ function App() {
   const handleReset = () => {
     setUploadedFile(null);
     setFileId('');
-    setEffects([]);
     setProcessedAudioUrl('');
     setError('');
     setSuccessMessage('');
