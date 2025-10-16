@@ -8,14 +8,16 @@ interface AudioPlayerProps {
   audioFile: File | string;
   title: string;
   theme: ThemePreset;
+  onReady?: () => void;
 }
 
-export default function AudioPlayer({ audioFile, title, theme }: AudioPlayerProps) {
+export default function AudioPlayer({ audioFile, title, theme, onReady }: AudioPlayerProps) {
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
+  const [isReady, setIsReady] = useState(false);
 
   const accentColor = theme.accentColor ?? theme.waveProgressColor;
   const waveColor = useMemo(
@@ -26,6 +28,8 @@ export default function AudioPlayer({ audioFile, title, theme }: AudioPlayerProp
 
   useEffect(() => {
     if (!waveformRef.current) return;
+
+    setIsReady(false);
 
     const wavesurfer = WaveSurfer.create({
       container: waveformRef.current,
@@ -52,6 +56,8 @@ export default function AudioPlayer({ audioFile, title, theme }: AudioPlayerProp
 
     wavesurfer.on('ready', () => {
       setDuration(wavesurfer.getDuration());
+      setIsReady(true);
+      onReady?.();
     });
 
     wavesurfer.on('audioprocess', () => {
@@ -92,10 +98,14 @@ export default function AudioPlayer({ audioFile, title, theme }: AudioPlayerProp
         </span>
       </div>
 
-      <div ref={waveformRef} className="mb-3" />
+      <div
+        ref={waveformRef}
+        className={cn('mb-3 transition-opacity duration-300', !isReady && 'opacity-0')}
+      />
 
       <button
         onClick={togglePlayPause}
+        disabled={!isReady}
         className={cn(
           'px-4 py-2 text-sm font-semibold rounded transition-colors duration-200',
           theme.audioPlayButtonClass,

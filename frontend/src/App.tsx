@@ -13,13 +13,18 @@ import { createEffectId } from './utils/effects';
 function App() {
   const [availableEffects, setAvailableEffects] = useState<AvailableEffects>({});
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [fileId, setFileId] = useState<string>('');
   const [effects, setEffects] = useState<EffectConfig[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string>('');
+  const [isProcessedAudioReady, setIsProcessedAudioReady] = useState(false);
+  const [pendingSuccessMessage, setPendingSuccessMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [isUploadedAudioReady, setIsUploadedAudioReady] = useState(false);
+  const [pendingUploadSuccessMessage, setPendingUploadSuccessMessage] = useState<string>('');
   const [uploadAnimationIndex, setUploadAnimationIndex] = useState(0);
   const [processingAnimationIndex, setProcessingAnimationIndex] = useState(0);
   const [errorFading, setErrorFading] = useState(false);
@@ -77,7 +82,9 @@ function App() {
   }, [successMessage]);
 
   useEffect(() => {
-    if (!isUploadingFile) {
+    const isLoadingUpload = isUploadingFile || pendingFile !== null;
+
+    if (!isLoadingUpload) {
       if (uploadAnimationRef.current) {
         clearInterval(uploadAnimationRef.current);
         uploadAnimationRef.current = null;
@@ -99,10 +106,12 @@ function App() {
       clearInterval(intervalId);
       uploadAnimationRef.current = null;
     };
-  }, [isUploadingFile]);
+  }, [isUploadingFile, pendingFile]);
 
   useEffect(() => {
-    if (!isProcessing) {
+    const isLoadingAudio = isProcessing || (processedAudioUrl && !isProcessedAudioReady);
+
+    if (!isLoadingAudio) {
       if (processingAnimationRef.current) {
         clearInterval(processingAnimationRef.current);
         processingAnimationRef.current = null;
@@ -124,11 +133,13 @@ function App() {
       clearInterval(intervalId);
       processingAnimationRef.current = null;
     };
-  }, [isProcessing]);
+  }, [isProcessing, processedAudioUrl, isProcessedAudioReady]);
 
   const invalidateProcessedAudio = () => {
     if (processedAudioUrl) {
       setProcessedAudioUrl('');
+      setIsProcessedAudioReady(false);
+      setPendingSuccessMessage('');
     }
   };
 
@@ -144,6 +155,8 @@ function App() {
     setError('');
     setSuccessMessage('');
     setUploadedFile(null);
+    setPendingFile(null);
+    setPendingUploadSuccessMessage('');
     setProcessedAudioUrl('');
     setFileId('');
     setIsUploadingFile(true);
@@ -151,20 +164,25 @@ function App() {
     try {
       const response = await audioAPI.uploadFile(file);
       setFileId(response.file_id);
-      setSuccessMessage('File uploaded successfully');
-
-      const restoreUploadedFile = () => setUploadedFile(file);
-      if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
-        window.requestAnimationFrame(restoreUploadedFile);
-      } else {
-        restoreUploadedFile();
-      }
+      setPendingUploadSuccessMessage('File uploaded successfully');
+      setPendingFile(file);
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to upload file';
       setError(`Upload failed: ${errorMessage}`);
       console.error('Upload error:', err);
     } finally {
       setIsUploadingFile(false);
+    }
+  };
+
+  const handleUploadedAudioReady = () => {
+    if (pendingFile) {
+      setUploadedFile(pendingFile);
+      setPendingFile(null);
+    }
+    if (pendingUploadSuccessMessage) {
+      setSuccessMessage(pendingUploadSuccessMessage);
+      setPendingUploadSuccessMessage('');
     }
   };
 
@@ -175,20 +193,30 @@ function App() {
     }
 
     setIsProcessing(true);
+    setIsProcessedAudioReady(false);
     setError('');
     setSuccessMessage('');
+    setPendingSuccessMessage('');
 
     try {
       const response = await audioAPI.processAudio(fileId, effects);
       const cacheBustedUrl = `${audioAPI.getDownloadUrl(fileId)}?t=${Date.now()}`;
       setProcessedAudioUrl(cacheBustedUrl);
-      setSuccessMessage(response.message || 'Audio processed successfully!');
+      setPendingSuccessMessage(response.message || 'Audio processed successfully!');
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to process audio';
       setError(`Processing failed: ${errorMessage}`);
       console.error('Processing error:', err);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleProcessedAudioReady = () => {
+    setIsProcessedAudioReady(true);
+    if (pendingSuccessMessage) {
+      setSuccessMessage(pendingSuccessMessage);
+      setPendingSuccessMessage('');
     }
   };
 
@@ -342,8 +370,12 @@ function App() {
 
   const handleReset = () => {
     setUploadedFile(null);
+    setPendingFile(null);
+    setPendingUploadSuccessMessage('');
     setFileId('');
     setProcessedAudioUrl('');
+    setIsProcessedAudioReady(false);
+    setPendingSuccessMessage('');
     setError('');
     setSuccessMessage('');
   };
@@ -354,8 +386,10 @@ function App() {
   const secondaryButtonClass = cn(baseButtonClass, theme.buttonSecondaryClass);
   const ghostButtonClass = cn(baseButtonClass, theme.buttonGhostClass);
   const headerUsesLightText = theme.headerTitleClass.includes('text-white');
-  const uploadingMessage = isUploadingFile ? `Uploading file${'.'.repeat((uploadAnimationIndex % 3) + 1)}` : '';
-  const processingMessage = isProcessing ? `Processing audio${'.'.repeat((processingAnimationIndex % 3) + 1)}` : '';
+  const isLoadingUploadedAudio = isUploadingFile || pendingFile !== null;
+  const uploadingMessage = isLoadingUploadedAudio ? `Uploading file${'.'.repeat((uploadAnimationIndex % 3) + 1)}` : '';
+  const isLoadingProcessedAudio = isProcessing || (processedAudioUrl && !isProcessedAudioReady);
+  const processingMessage = isLoadingProcessedAudio ? `Processing audio${'.'.repeat((processingAnimationIndex % 3) + 1)}` : '';
 
   return (
     <div className={cn('min-h-screen transition-colors duration-500', theme.bodyClass)}>
@@ -393,7 +427,7 @@ function App() {
             </div>
           </div>
         )}
-        {isUploadingFile && (
+        {isLoadingUploadedAudio && (
           <div
             className={cn(
               'group rounded-2xl px-4 py-4 transition-all duration-500 border',
@@ -411,7 +445,7 @@ function App() {
             </div>
           </div>
         )}
-        {isProcessing && (
+        {isLoadingProcessedAudio && (
           <div
             className={cn(
               'group rounded-2xl px-4 py-4 transition-all duration-500 border',
@@ -465,12 +499,33 @@ function App() {
           <div className={theme.mainWrapperClass}>
             <div className={cn('rounded-3xl p-6 space-y-4 transition-colors duration-300 border', theme.mainPanelClass)}>
               {!uploadedFile ? (
-                <FileUpload onFileSelected={handleFileSelected} isProcessing={isProcessing} theme={theme} />
+                <>
+                  <FileUpload onFileSelected={handleFileSelected} isProcessing={isProcessing} theme={theme} />
+                  {pendingFile && (
+                    <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+                      <AudioPlayer
+                        audioFile={pendingFile}
+                        title="Original"
+                        theme={theme}
+                        onReady={handleUploadedAudioReady}
+                      />
+                    </div>
+                  )}
+                </>
               ) : (
                 <>
-                  <AudioPlayer audioFile={uploadedFile} title="Original" theme={theme} />
+                  <AudioPlayer
+                    audioFile={uploadedFile}
+                    title="Original"
+                    theme={theme}
+                  />
                   {processedAudioUrl && (
-                    <AudioPlayer audioFile={processedAudioUrl} title="Processed" theme={theme} />
+                    <AudioPlayer
+                      audioFile={processedAudioUrl}
+                      title="Processed"
+                      theme={theme}
+                      onReady={handleProcessedAudioReady}
+                    />
                   )}
 
                   <div className="space-y-3">
