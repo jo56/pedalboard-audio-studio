@@ -22,6 +22,8 @@ function App() {
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [errorFading, setErrorFading] = useState(false);
+  const [successFading, setSuccessFading] = useState(false);
   const defaultTheme =
     THEME_PRESETS.find((preset) => preset.id === 'clay') ?? THEME_PRESETS[0];
   const importInputRef = useRef<HTMLInputElement | null>(null);
@@ -43,19 +45,35 @@ function App() {
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => {
+      setErrorFading(false);
+      const fadeTimer = setTimeout(() => {
+        setErrorFading(true);
+      }, 700);
+      const clearTimer = setTimeout(() => {
         setError('');
-      }, 3000);
-      return () => clearTimeout(timer);
+        setErrorFading(false);
+      }, 1000);
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(clearTimer);
+      };
     }
   }, [error]);
 
   useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(() => {
+      setSuccessFading(false);
+      const fadeTimer = setTimeout(() => {
+        setSuccessFading(true);
+      }, 700);
+      const clearTimer = setTimeout(() => {
         setSuccessMessage('');
-      }, 3000);
-      return () => clearTimeout(timer);
+        setSuccessFading(false);
+      }, 1000);
+      return () => {
+        clearTimeout(fadeTimer);
+        clearTimeout(clearTimer);
+      };
     }
   }, [successMessage]);
 
@@ -258,7 +276,10 @@ function App() {
 
       <main className={cn('max-w-6xl mx-auto px-6 py-6 space-y-6')}>
         {error && (
-          <div className="group p-3 bg-red-500/10 border border-red-400/40 text-red-200 rounded-lg text-sm">
+          <div className={cn(
+            'group p-3 bg-red-500/10 border border-red-400/40 text-red-200 rounded-lg text-sm transition-opacity duration-500',
+            errorFading && 'opacity-0'
+          )}>
             <div className="flex items-center justify-between gap-3">
               <p className="leading-snug flex-1">{error}</p>
               <button
@@ -273,7 +294,11 @@ function App() {
           </div>
         )}
         {successMessage && (
-          <div className={cn('group rounded-2xl px-4 py-4 transition-colors duration-300 border', theme.audioPanelClass)}>
+          <div className={cn(
+            'group rounded-2xl px-4 py-4 transition-all duration-500 border',
+            theme.audioPanelClass,
+            successFading && 'opacity-0'
+          )}>
             <div className="flex items-center justify-between gap-3">
               <p className={cn('text-xs leading-snug flex-1', theme.mutedTextClass)}>{successMessage}</p>
               <button
