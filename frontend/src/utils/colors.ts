@@ -59,10 +59,6 @@ const toRgbaString = ({ r, g, b }: RgbColor, alpha: number): string => {
   return `rgba(${Math.round(clampChannel(r))}, ${Math.round(clampChannel(g))}, ${Math.round(clampChannel(b))}, ${alpha})`;
 };
 
-const toRgbString = ({ r, g, b }: RgbColor): string => {
-  return `rgb(${Math.round(clampChannel(r))}, ${Math.round(clampChannel(g))}, ${Math.round(clampChannel(b))})`;
-};
-
 const mixRgb = (base: RgbColor, target: RgbColor, amount: number): RgbColor => {
   const weight = Math.min(1, Math.max(0, amount));
   const inverse = 1 - weight;

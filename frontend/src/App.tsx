@@ -13,6 +13,25 @@ import { cn } from './utils/classnames';
 const createEffectId = (type: string, index: number) =>
   `${type}-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`;
 
+const TOAST_AUTO_HIDE_MS = 4000;
+const TOAST_FADE_MS = 300;
+
+type ToastTimers = {
+  hide?: ReturnType<typeof setTimeout>;
+  clear?: ReturnType<typeof setTimeout>;
+};
+
+const clearToastTimers = (timers: ToastTimers) => {
+  if (timers.hide !== undefined) {
+    clearTimeout(timers.hide);
+    timers.hide = undefined;
+  }
+  if (timers.clear !== undefined) {
+    clearTimeout(timers.clear);
+    timers.clear = undefined;
+  }
+};
+
 function App() {
   const [availableEffects, setAvailableEffects] = useState<AvailableEffects>({});
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -22,11 +41,13 @@ function App() {
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
-  const [errorFading, setErrorFading] = useState(false);
-  const [successFading, setSuccessFading] = useState(false);
+  const [showErrorToast, setShowErrorToast] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const defaultTheme =
     THEME_PRESETS.find((preset) => preset.id === 'clay') ?? THEME_PRESETS[0];
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const errorToastTimers = useRef<ToastTimers>({});
+  const successToastTimers = useRef<ToastTimers>({});
 
   const theme: ThemePreset = defaultTheme;
 
@@ -44,38 +65,87 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (error) {
-      setErrorFading(false);
-      const fadeTimer = setTimeout(() => {
-        setErrorFading(true);
-      }, 700);
-      const clearTimer = setTimeout(() => {
-        setError('');
-        setErrorFading(false);
-      }, 1000);
-      return () => {
-        clearTimeout(fadeTimer);
-        clearTimeout(clearTimer);
-      };
+    clearToastTimers(errorToastTimers.current);
+
+    if (!error) {
+      setShowErrorToast(false);
+      return;
     }
+
+    setShowErrorToast(true);
+
+    errorToastTimers.current.hide = setTimeout(() => {
+      setShowErrorToast(false);
+    }, TOAST_AUTO_HIDE_MS);
+
+    errorToastTimers.current.clear = setTimeout(() => {
+      setError('');
+      clearToastTimers(errorToastTimers.current);
+    }, TOAST_AUTO_HIDE_MS + TOAST_FADE_MS);
+
+    return () => {
+      clearToastTimers(errorToastTimers.current);
+    };
   }, [error]);
 
   useEffect(() => {
-    if (successMessage) {
-      setSuccessFading(false);
-      const fadeTimer = setTimeout(() => {
-        setSuccessFading(true);
-      }, 700);
-      const clearTimer = setTimeout(() => {
-        setSuccessMessage('');
-        setSuccessFading(false);
-      }, 1000);
-      return () => {
-        clearTimeout(fadeTimer);
-        clearTimeout(clearTimer);
-      };
+    clearToastTimers(successToastTimers.current);
+
+    if (!successMessage) {
+      setShowSuccessToast(false);
+      return;
     }
+
+    setShowSuccessToast(true);
+
+    successToastTimers.current.hide = setTimeout(() => {
+      setShowSuccessToast(false);
+    }, TOAST_AUTO_HIDE_MS);
+
+    successToastTimers.current.clear = setTimeout(() => {
+      setSuccessMessage('');
+      clearToastTimers(successToastTimers.current);
+    }, TOAST_AUTO_HIDE_MS + TOAST_FADE_MS);
+
+    return () => {
+      clearToastTimers(successToastTimers.current);
+    };
   }, [successMessage]);
+
+  useEffect(() => {
+    return () => {
+      clearToastTimers(errorToastTimers.current);
+      clearToastTimers(successToastTimers.current);
+    };
+  }, []);
+
+  const dismissErrorToast = () => {
+    if (!error) {
+      return;
+    }
+
+    clearToastTimers(errorToastTimers.current);
+    setShowErrorToast(false);
+
+    errorToastTimers.current.clear = setTimeout(() => {
+      setError('');
+      clearToastTimers(errorToastTimers.current);
+    }, TOAST_FADE_MS);
+  };
+
+  const dismissSuccessToast = () => {
+    if (!successMessage) {
+      return;
+    }
+
+    clearToastTimers(successToastTimers.current);
+    setShowSuccessToast(false);
+
+    successToastTimers.current.clear = setTimeout(() => {
+      setSuccessMessage('');
+      clearToastTimers(successToastTimers.current);
+    }, TOAST_FADE_MS);
+  };
 
   const invalidateProcessedAudio = () => {
     if (processedAudioUrl) {
@@ -275,44 +345,6 @@ function App() {
       </header>
 
       <main className={cn('max-w-6xl mx-auto px-6 py-6 space-y-6')}>
-        {error && (
-          <div className={cn(
-            'group p-3 bg-red-500/10 border border-red-400/40 text-red-200 rounded-lg text-sm transition-opacity duration-500',
-            errorFading && 'opacity-0'
-          )}>
-            <div className="flex items-center justify-between gap-3">
-              <p className="leading-snug flex-1">{error}</p>
-              <button
-                type="button"
-                className="flex-shrink-0 text-red-200/80 hover:text-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                aria-label="Dismiss error message"
-                onClick={() => setError('')}
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
-        {successMessage && (
-          <div className={cn(
-            'group rounded-2xl px-4 py-4 transition-all duration-500 border',
-            theme.audioPanelClass,
-            successFading && 'opacity-0'
-          )}>
-            <div className="flex items-center justify-between gap-3">
-              <p className={cn('text-xs leading-snug flex-1', theme.mutedTextClass)}>{successMessage}</p>
-              <button
-                type="button"
-                className="flex-shrink-0 text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                aria-label="Dismiss message"
-                onClick={() => setSuccessMessage('')}
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className={cn(theme.layoutWrapperClass, 'gap-6')}>
           <div className={theme.effectsWrapperClass}>
             <EffectChain
@@ -366,6 +398,52 @@ function App() {
           </div>
         </div>
       </main>
+
+      <div className="pointer-events-none fixed bottom-5 right-5 z-50 flex flex-col gap-2">
+        {error && (
+          <div
+            className={cn(
+              'pointer-events-auto w-72 rounded-lg border border-red-500/70 bg-red-600/95 text-red-50 shadow-xl transition-all duration-300 transform',
+              showErrorToast ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
+            )}
+            role="alert"
+          >
+            <div className="flex items-start gap-3">
+              <p className="text-xs leading-snug flex-1">{error}</p>
+              <button
+                type="button"
+                className="text-red-100/80 hover:text-red-50"
+                onClick={dismissErrorToast}
+                aria-label="Dismiss error message"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        {successMessage && (
+          <div
+            className={cn(
+              'pointer-events-auto w-72 rounded-lg border border-slate-200 bg-white/95 text-slate-900 shadow-xl transition-all duration-300 transform dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100',
+              showSuccessToast ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
+            )}
+            role="status"
+          >
+            <div className="flex items-start gap-3">
+              <p className={cn('text-xs leading-snug flex-1', theme.mutedTextClass)}>{successMessage}</p>
+              <button
+                type="button"
+                className="text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                onClick={dismissSuccessToast}
+                aria-label="Dismiss message"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <input
         ref={importInputRef}
