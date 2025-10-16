@@ -38,26 +38,16 @@ const defaultValueForParam = (paramDef: EffectParam): any => {
   }
 };
 
-const isInteractiveElement = (element: HTMLElement | null): boolean => {
+const isDragHandle = (element: HTMLElement | null): boolean => {
   if (!element) return false;
 
-  // Check if the element itself is an interactive tag
-  const tagName = element.tagName?.toUpperCase();
-  if (tagName === 'INPUT' || tagName === 'SELECT' || tagName === 'TEXTAREA' || tagName === 'BUTTON') {
-    return true;
+  // Don't allow dragging from buttons
+  if (element.tagName?.toUpperCase() === 'BUTTON' || element.closest('button')) {
+    return false;
   }
 
-  // Check if element is within a no-drag zone
-  if (element.closest('[data-no-drag="true"]')) {
-    return true;
-  }
-
-  // Check if the element or any ancestor is an interactive element
-  return Boolean(
-    element.closest(
-      'input, select, textarea, button, [role="slider"], [contenteditable="true"], [data-drag-ignore="true"]',
-    ),
-  );
+  // Check if this element or any parent is the drag handle (the header area)
+  return Boolean(element.closest('[data-drag-handle="true"]'));
 };
 
 export default function EffectChain({
@@ -105,7 +95,18 @@ export default function EffectChain({
   };
 
   const handleDragStart = (id: string) => (event: DragEvent<HTMLDivElement>) => {
-    if (isInteractiveElement(event.target as HTMLElement)) {
+    const target = event.target as HTMLElement;
+    const isHandle = isDragHandle(target);
+
+    console.log('Drag attempt:', {
+      target: target.tagName,
+      className: target.className,
+      isHandle,
+      hasDragHandleAttr: Boolean(target.closest('[data-drag-handle="true"]')),
+    });
+
+    // Only allow dragging if started from the drag handle (the header area)
+    if (!isHandle) {
       event.preventDefault();
       return;
     }
@@ -272,7 +273,7 @@ export default function EffectChain({
           </div>
 
           <p className={cn('mt-3 text-xs leading-snug', theme.mutedTextClass)}>
-            Drag any effect card to change its position. The chain updates as you move.
+            Drag the header of any effect to change its position. The chain updates as you move.
           </p>
         </>
       )}
