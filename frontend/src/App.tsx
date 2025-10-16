@@ -246,7 +246,7 @@ function App() {
         )}
         {successMessage && (
           <div className={cn('rounded-2xl px-4 py-4 transition-colors duration-300 border', theme.audioPanelClass)}>
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">
+            <p className="text-[11px] font-medium text-slate-800 dark:text-slate-100 leading-snug">
               {successMessage}
             </p>
           </div>
@@ -294,7 +294,7 @@ function App() {
                         Reset
                       </button>
                     </div>
-                    <p className="text-xs text-slate-800 dark:text-slate-100 leading-relaxed">
+                    <p className="text-[11px] font-medium text-slate-800 dark:text-slate-100 leading-snug">
                       Process renders the current chain against the uploaded audio. Export your chain to
                       reuse settings across sessions or in code.
                     </p>

@@ -162,7 +162,7 @@ export default function EffectChain({
   const hasEffects = effects.length > 0;
 
   return (
-    <div className={cn(panelClass, 'space-y-3 pb-5 pt-3')}>
+    <div className={cn(panelClass, 'space-y-3 py-5')}>
       <div className="space-y-1.5">
         <select
           value={selectedEffectType}
