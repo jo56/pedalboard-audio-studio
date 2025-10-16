@@ -9,6 +9,7 @@ import { THEME_PRESETS } from './theme-presets';
 import type { ThemePreset } from './theme-presets';
 import { cn } from './utils/classnames';
 
+
 const createEffectId = (type: string, index: number) =>
   `${type}-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`;
 
@@ -235,9 +236,9 @@ function App() {
         )}
       >
         <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <h1 className={cn('text-2xl font-semibold', theme.headerTitleClass)}>Pedalboard Audio Studio</h1>
-            <div className="flex items-center gap-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+            <h1 className={cn('text-2xl font-semibold min-w-0', theme.headerTitleClass)}>Pedalboard Audio Studio</h1>
+            <div className="flex items-center justify-self-end">
               <select
                 value={selectedThemeId}
                 onChange={(event) => setSelectedThemeId(event.target.value)}
@@ -264,8 +265,8 @@ function App() {
           </div>
         )}
         {successMessage && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-400/40 text-emerald-200 rounded-lg text-sm">
-            {successMessage}
+          <div className={cn('rounded-3xl p-5 transition-colors duration-300 border', theme.audioPanelClass)}>
+            <p className="text-sm font-medium">{successMessage}</p>
           </div>
         )}
 
@@ -335,3 +336,6 @@ function App() {
 }
 
 export default App;
+
+
+

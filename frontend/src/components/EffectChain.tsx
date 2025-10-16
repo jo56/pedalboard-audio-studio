@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import type { DragEvent } from 'react';
 import type { EffectConfig, AvailableEffects, EffectParam } from '../types';
 import EffectControl from './EffectControl';
@@ -158,7 +158,8 @@ export default function EffectChain({
     theme.selectClass,
   );
   const compactActionButtonClass =
-    'w-full min-h-[2.75rem] px-5 text-xs sm:text-sm tracking-[0.08em] flex items-center justify-center whitespace-nowrap';
+    'w-full min-h-[2.65rem] px-4 text-xs sm:text-sm flex items-center justify-center whitespace-nowrap';
+  const hasEffects = effects.length > 0;
 
   return (
     <div className={cn(panelClass, 'space-y-3 pb-6')}>
@@ -194,13 +195,20 @@ export default function EffectChain({
           >
             <span className="pl-1">Clear</span>
           </button>
-          <button onClick={onImportEffects} className={cn(ghostButtonClass, 'w-full')} type="button">
+          <button
+            onClick={onImportEffects}
+            className={cn(ghostButtonClass, 'w-full min-h-[2.65rem] flex items-center justify-center text-xs sm:text-sm')}
+            type="button"
+          >
             Import
           </button>
           <button
             onClick={onExportEffects}
             disabled={effects.length === 0}
-            className={cn(ghostButtonClass, 'w-full')}
+            className={cn(
+              ghostButtonClass,
+              'w-full min-h-[2.65rem] flex items-center justify-center text-xs sm:text-sm',
+            )}
             type="button"
           >
             Export
@@ -208,50 +216,50 @@ export default function EffectChain({
         </div>
       </div>
 
-      {effects.length > 0 && (
-        <div className="space-y-3">
-          {effects.map((effect, index) => {
-            const definition = availableEffects[effect.type];
-            if (!definition) return null;
+      {hasEffects && (
+        <>
+          <div className="space-y-3">
+            {effects.map((effect, index) => {
+              const definition = availableEffects[effect.type];
+              if (!definition) return null;
 
-            const isDragging = draggingId === effect.id;
-            const isTarget = activeHoverId === effect.id && !isDragging;
+              const isDragging = draggingId === effect.id;
+              const isTarget = activeHoverId === effect.id && !isDragging;
 
-            const cardClass = cn(
-              'rounded-2xl border transition-shadow duration-200',
-              theme.effectCardClass,
-              isDragging && theme.effectCardActiveClass,
-              isTarget && theme.effectCardTargetClass,
-            );
+              const cardClass = cn(
+                'rounded-2xl border transition-shadow duration-200',
+                theme.effectCardClass,
+                isDragging && theme.effectCardActiveClass,
+                isTarget && theme.effectCardTargetClass,
+              );
 
-            return (
-              <div
-                key={effect.id}
-                draggable
-                onDragStart={handleDragStart(effect.id)}
-                onDragOver={handleDragOverCard(effect.id, index)}
-                onDragEnter={handleDragOverCard(effect.id, index)}
-                onDrop={handleDrop}
-                onDragEnd={handleDragEnd}
-              >
-                <EffectControl
-                  effect={effect}
-                  definition={definition}
-                  onUpdate={(updated) => updateEffect(index, updated)}
-                  onRemove={() => removeEffect(index)}
-                  className={cardClass}
-                  theme={theme}
-                />
-              </div>
-            );
-          })}
-        </div>
-      )}
+              return (
+                <div
+                  key={effect.id}
+                  draggable
+                  onDragStart={handleDragStart(effect.id)}
+                  onDragOver={handleDragOverCard(effect.id, index)}
+                  onDragEnter={handleDragOverCard(effect.id, index)}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                >
+                  <EffectControl
+                    effect={effect}
+                    definition={definition}
+                    onUpdate={(updated) => updateEffect(index, updated)}
+                    onRemove={() => removeEffect(index)}
+                    className={cardClass}
+                    theme={theme}
+                  />
+                </div>
+              );
+            })}
+          </div>
 
-      {effects.length > 0 && (
-        <p className={cn('mt-3 text-[11px]', theme.mutedTextClass)}>
-          Drag any effect card to change its position. The chain updates as you move.
-        </p>
+          <p className={cn('mt-3 text-[11px]', theme.mutedTextClass)}>
+            Drag any effect card to change its position. The chain updates as you move.
+          </p>
+        </>
       )}
     </div>
   );
