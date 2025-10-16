@@ -5,6 +5,9 @@ import AudioPlayer from './components/AudioPlayer';
 import EffectChain from './components/EffectChain';
 import { audioAPI } from './api';
 import type { AvailableEffects, EffectConfig } from './types';
+import { THEME_PRESETS } from './theme-presets';
+import type { ThemePreset } from './theme-presets';
+import { cn } from './utils/classnames';
 
 const createEffectId = (type: string, index: number) =>
   `${type}-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`;
@@ -18,7 +21,10 @@ function App() {
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [selectedThemeId, setSelectedThemeId] = useState<string>(THEME_PRESETS[0].id);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+
+  const theme: ThemePreset = THEME_PRESETS.find((preset) => preset.id === selectedThemeId) ?? THEME_PRESETS[0];
 
   useEffect(() => {
     const loadEffects = async () => {
@@ -209,28 +215,56 @@ function App() {
     setSuccessMessage('');
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <h1 className="text-xl font-semibold text-gray-900">Pedalboard Audio Studio</h1>
-        </div>
-      </div>
+  const baseButtonClass =
+    'px-4 py-2 text-sm font-semibold rounded transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60';
+  const primaryButtonClass = cn(baseButtonClass, theme.buttonPrimaryClass);
+  const secondaryButtonClass = cn(baseButtonClass, theme.buttonSecondaryClass);
+  const ghostButtonClass = cn(baseButtonClass, theme.buttonGhostClass);
 
-      <div className="max-w-6xl mx-auto px-6 py-6">
+  return (
+    <div className={cn('min-h-screen transition-colors duration-500', theme.bodyClass)}>
+      <header className={cn('transition-colors duration-500 border-b', theme.headerClass)}>
+        <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <h1 className={cn('text-2xl font-semibold', theme.headerTitleClass)}>Pedalboard Audio Studio</h1>
+            <div className="flex items-center gap-3">
+              <label className={cn('text-xs uppercase tracking-wide', theme.mutedTextClass)}>
+                Theme
+              </label>
+              <select
+                value={selectedThemeId}
+                onChange={(event) => setSelectedThemeId(event.target.value)}
+                className={cn(
+                  'px-3 py-2 text-sm rounded transition-colors focus:outline-none',
+                  theme.selectClass,
+                )}
+              >
+                {THEME_PRESETS.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p className={cn('text-xs max-w-3xl', theme.mutedTextClass)}>{theme.description}</p>
+        </div>
+      </header>
+
+      <main className={cn('max-w-6xl mx-auto px-6 py-6 space-y-6')}>
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded text-sm">
+          <div className="p-3 bg-red-500/10 border border-red-400/40 text-red-200 rounded-lg text-sm">
             {error}
           </div>
         )}
         {successMessage && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded text-sm">
+          <div className="p-3 bg-emerald-500/10 border border-emerald-400/40 text-emerald-200 rounded-lg text-sm">
             {successMessage}
           </div>
         )}
 
-        <div className="flex gap-6">
-          <div className="w-1/3">
+        <div className={cn(theme.layoutWrapperClass, 'gap-6')}>
+          <div className={theme.effectsWrapperClass}>
             <EffectChain
               effects={effects}
               availableEffects={availableEffects}
@@ -238,49 +272,50 @@ function App() {
               onClearEffects={handleClearEffects}
               onExportEffects={handleExportEffects}
               onImportEffects={handleImportClick}
+              theme={theme}
             />
           </div>
 
-          <div className="w-2/3 space-y-4">
-            {!uploadedFile ? (
-              <FileUpload onFileSelected={handleFileSelected} isProcessing={isProcessing} />
-            ) : (
-              <>
-                <AudioPlayer audioFile={uploadedFile} title="Original" />
-                {processedAudioUrl && (
-                  <AudioPlayer audioFile={processedAudioUrl} title="Processed" />
-                )}
+          <div className={theme.mainWrapperClass}>
+            <div className={cn('rounded-3xl p-6 space-y-5 transition-colors duration-300 border', theme.mainPanelClass)}>
+              {!uploadedFile ? (
+                <FileUpload onFileSelected={handleFileSelected} isProcessing={isProcessing} theme={theme} />
+              ) : (
+                <>
+                  <AudioPlayer audioFile={uploadedFile} title="Original" theme={theme} />
+                  {processedAudioUrl && (
+                    <AudioPlayer audioFile={processedAudioUrl} title="Processed" theme={theme} />
+                  )}
 
-                <div className="bg-white border border-gray-200 rounded p-3">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleProcess}
-                      disabled={isProcessing || effects.length === 0}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-3 py-2 rounded text-sm font-medium disabled:cursor-not-allowed"
-                    >
-                      {isProcessing ? 'Processing...' : 'Process Audio'}
-                    </button>
-                    {processedAudioUrl && (
+                  <div className="space-y-3">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <button
-                        onClick={handleDownload}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-medium"
+                        onClick={handleProcess}
+                        disabled={isProcessing || effects.length === 0}
+                        className={primaryButtonClass}
                       >
-                        Download
+                        {isProcessing ? 'Processing…' : 'Process Audio'}
                       </button>
-                    )}
-                    <button
-                      onClick={handleReset}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm font-medium"
-                    >
-                      Reset
-                    </button>
+                      {processedAudioUrl && (
+                        <button onClick={handleDownload} className={secondaryButtonClass}>
+                          Download
+                        </button>
+                      )}
+                      <button onClick={handleReset} className={ghostButtonClass}>
+                        Reset
+                      </button>
+                    </div>
+                    <p className={cn('text-xs', theme.mutedTextClass)}>
+                      Process renders the current chain against the uploaded audio. Export your chain to
+                      reuse settings across sessions or in code.
+                    </p>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <input
         ref={importInputRef}

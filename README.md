@@ -164,6 +164,15 @@ Example preset creation payload:
 - `GET /download/{file_id}` – Download processed audio
 - `DELETE /cleanup/{file_id}` – Remove uploaded/processed files
 
+## Deployment
+
+For production deployment instructions, see **[DEPLOYMENT.md](./DEPLOYMENT.md)** which covers:
+
+- Railway (fullstack deployment - recommended)
+- Cloudflare Pages + Railway
+- Vercel + Railway
+- Render and other alternatives
+
 ## Development Notes
 
 - Swagger UI: http://localhost:8000/docs

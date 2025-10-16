@@ -1,17 +1,23 @@
-import { useCallback } from 'react';
+﻿import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import type { ThemePreset } from '../theme-presets';
+import { cn } from '../utils/classnames';
 
 interface FileUploadProps {
   onFileSelected: (file: File) => void;
   isProcessing: boolean;
+  theme: ThemePreset;
 }
 
-export default function FileUpload({ onFileSelected, isProcessing }: FileUploadProps) {
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      onFileSelected(acceptedFiles[0]);
-    }
-  }, [onFileSelected]);
+export default function FileUpload({ onFileSelected, isProcessing, theme }: FileUploadProps) {
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      if (acceptedFiles.length > 0) {
+        onFileSelected(acceptedFiles[0]);
+      }
+    },
+    [onFileSelected],
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -22,20 +28,19 @@ export default function FileUpload({ onFileSelected, isProcessing }: FileUploadP
     disabled: isProcessing,
   });
 
+  const dropzoneClass = cn(
+    'border-2 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all max-w-xl mx-auto',
+    theme.dropzoneBaseClass,
+    isDragActive && theme.dropzoneActiveClass,
+    isProcessing && theme.dropzoneDisabledClass,
+  );
+
   return (
-    <div
-      {...getRootProps()}
-      className={`
-        bg-white border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
-        ${isDragActive ? 'border-blue-500 bg-blue-50 scale-105' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'}
-        ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}
-        max-w-md mx-auto
-      `}
-    >
+    <div {...getRootProps()} className={dropzoneClass}>
       <input {...getInputProps()} />
       <div className="flex flex-col items-center gap-3">
         <svg
-          className="w-12 h-12 text-gray-400"
+          className="w-12 h-12"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -49,11 +54,15 @@ export default function FileUpload({ onFileSelected, isProcessing }: FileUploadP
           />
         </svg>
         {isDragActive ? (
-          <p className="text-base text-blue-600 font-medium">Drop file here</p>
+          <p className={cn('text-base font-medium uppercase tracking-wide', theme.headingTextClass)}>
+            Drop file here
+          </p>
         ) : (
-          <div>
-            <p className="text-base text-gray-700 font-medium mb-1">Drop audio file or click to browse</p>
-            <p className="text-sm text-gray-500">Supports MP3, WAV, FLAC, OGG, M4A</p>
+          <div className="space-y-1">
+            <p className={cn('text-base font-medium', theme.headingTextClass)}>
+              Drop audio file or click to browse
+            </p>
+            <p className={cn('text-sm', theme.mutedTextClass)}>Supports MP3, WAV, FLAC, OGG, M4A</p>
           </div>
         )}
       </div>

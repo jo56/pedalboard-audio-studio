@@ -1,10 +1,14 @@
 ﻿import type { EffectConfig, EffectDefinition, EffectParam } from '../types';
+import type { ThemePreset } from '../theme-presets';
+import { cn } from '../utils/classnames';
 
 interface EffectControlProps {
   effect: EffectConfig;
   definition: EffectDefinition;
   onUpdate: (effect: EffectConfig) => void;
   onRemove: () => void;
+  className?: string;
+  theme: ThemePreset;
 }
 
 const formatValue = (value: unknown) => {
@@ -15,7 +19,7 @@ const formatValue = (value: unknown) => {
     return value ? 'true' : 'false';
   }
   if (value === null || value === undefined) {
-    return '—';
+    return '-';
   }
   if (typeof value === 'object') {
     return 'custom';
@@ -59,6 +63,8 @@ export default function EffectControl({
   definition,
   onUpdate,
   onRemove,
+  className,
+  theme,
 }: EffectControlProps) {
   const handleParamChange = (paramName: string, value: any) => {
     onUpdate({
@@ -70,6 +76,17 @@ export default function EffectControl({
     });
   };
 
+  const selectClass = cn(
+    'w-full px-2 py-1 text-xs rounded transition-colors focus:outline-none',
+    theme.selectClass,
+  );
+  const inputClass = cn(
+    'w-full px-2 py-1 text-xs rounded transition-colors focus:outline-none',
+    theme.inputClass,
+  );
+  const checkboxClass = cn('h-3 w-3 rounded focus:ring-1', theme.checkboxClass);
+  const helperTextClass = cn('mt-1 text-[10px]', theme.mutedTextClass);
+
   const renderControl = (paramName: string, paramDef: EffectParam) => {
     const currentValue =
       effect.params[paramName] ?? resolveDefaultValue(paramName, paramDef);
@@ -80,7 +97,7 @@ export default function EffectControl({
         <select
           value={currentValue ?? ''}
           onChange={(e) => handleParamChange(paramName, e.target.value)}
-          className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className={selectClass}
         >
           {options.length === 0 && <option value="">No options available</option>}
           {options.map((option) => (
@@ -94,12 +111,12 @@ export default function EffectControl({
 
     if (paramDef.type === 'bool') {
       return (
-        <label className="inline-flex items-center gap-2 text-xs text-gray-700">
+        <label className={cn('inline-flex items-center gap-2 text-xs', theme.mutedTextClass)}>
           <input
             type="checkbox"
             checked={Boolean(currentValue)}
             onChange={(e) => handleParamChange(paramName, e.target.checked)}
-            className="h-3 w-3 text-blue-600 border-gray-300 rounded"
+            className={checkboxClass}
           />
           Enabled
         </label>
@@ -112,7 +129,7 @@ export default function EffectControl({
           type="text"
           value={currentValue ?? ''}
           onChange={(e) => handleParamChange(paramName, e.target.value)}
-          className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className={inputClass}
         />
       );
     }
@@ -124,16 +141,16 @@ export default function EffectControl({
           <textarea
             value={jsonValue}
             readOnly
-            className="w-full h-20 px-2 py-1 text-xs font-mono border border-dashed border-gray-300 rounded bg-gray-50 text-gray-500"
+            className={cn(
+              'w-full h-20 px-2 py-1 text-xs font-mono border border-dashed rounded',
+              theme.inputClass,
+            )}
           />
-          <p className="mt-1 text-[10px] text-gray-400">
-            Advanced parameter. Edit via presets or manual API requests.
-          </p>
+          <p className={helperTextClass}>Advanced parameter. Edit via presets or manual API requests.</p>
         </div>
       );
     }
 
-    // Numeric controls (float/int)
     if (paramDef.min !== undefined && paramDef.max !== undefined) {
       const step = (paramDef.max - paramDef.min) / 100 || 0.01;
       return (
@@ -146,7 +163,8 @@ export default function EffectControl({
           onChange={(e) =>
             handleParamChange(paramName, castSliderValue(e.target.value, paramDef))
           }
-          className="w-full h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-600"
+          className="w-full h-1 rounded appearance-none cursor-pointer"
+          style={{ accentColor: theme.accentColor }}
         />
       );
     }
@@ -156,21 +174,27 @@ export default function EffectControl({
         type="number"
         value={currentValue ?? 0}
         onChange={(e) => handleParamChange(paramName, Number(e.target.value))}
-        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className={inputClass}
       />
     );
   };
 
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded p-3">
+    <div className={cn('p-3 transition-colors duration-200', className)}>
       <div className="flex items-start justify-between mb-2">
         <div>
-          <h4 className="text-xs font-semibold text-gray-900">{definition.name}</h4>
-          <p className="text-xs text-gray-500">{definition.description}</p>
+          <h4 className={cn('text-xs font-semibold', theme.headingTextClass)}>{definition.name}</h4>
+          <p className={cn('text-xs', theme.mutedTextClass)}>{definition.description}</p>
           {definition.tags && definition.tags.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
+            <div className="mt-2 flex flex-wrap gap-1">
               {definition.tags.map((tag) => (
-                <span key={tag} className="text-[10px] uppercase tracking-wide text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                <span
+                  key={tag}
+                  className={cn(
+                    'text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded border',
+                    theme.tagClass,
+                  )}
+                >
                   {tag}
                 </span>
               ))}
@@ -179,7 +203,7 @@ export default function EffectControl({
         </div>
         <button
           onClick={onRemove}
-          className="text-gray-400 hover:text-red-600 ml-2"
+          className={cn('ml-2 transition-colors', theme.mutedTextClass, 'hover:text-red-400')}
           title="Remove"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,17 +220,15 @@ export default function EffectControl({
           return (
             <div key={paramName}>
               <div className="flex justify-between items-center mb-1">
-                <label className="text-xs text-gray-600 capitalize">
+                <label className={cn('text-xs capitalize', theme.mutedTextClass)}>
                   {paramName.replace(/_/g, ' ')}
                 </label>
-                <span className="text-xs text-gray-900 font-mono">
+                <span className={cn('text-xs font-mono', theme.headingTextClass)}>
                   {formatValue(currentValue)}
                 </span>
               </div>
               {renderControl(paramName, paramDef)}
-              {paramDef.help && (
-                <p className="mt-1 text-[10px] text-gray-400">{paramDef.help}</p>
-              )}
+              {paramDef.help && <p className={helperTextClass}>{paramDef.help}</p>}
             </div>
           );
         })}
