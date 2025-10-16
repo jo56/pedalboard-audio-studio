@@ -4,128 +4,85 @@ This guide covers deploying the Pedalboard Audio Studio to various hosting platf
 
 ## Table of Contents
 
-- [Railway (Fullstack - Recommended)](#railway-fullstack---recommended)
-- [Cloudflare Pages + Railway](#cloudflare-pages--railway)
+- [Cloudflare Pages + Railway (Recommended)](#cloudflare-pages--railway-recommended)
+- [Railway (Monorepo Alternative)](#railway-monorepo-alternative)
 - [Vercel + Railway](#vercel--railway)
 - [Render (Alternative)](#render-alternative)
 
-## Railway (Fullstack - Recommended)
+## Cloudflare Pages + Railway (Recommended)
 
-Railway is the easiest option for deploying this fullstack app. It can handle both the Python backend and React frontend in a single deployment.
+Serve the FastAPI backend from Railway and ship the static React build from Cloudflare's global CDN for fast loads and simple scale.
 
 ### Prerequisites
 
 - Railway account (https://railway.app)
-- GitHub account with this repository
+- Cloudflare account (https://cloudflare.com)
+- GitHub repository containing this project
 
-### Option 1: Monorepo Deployment (Separate Services)
+### Backend on Railway
 
-This is the recommended approach for maximum flexibility.
-
-#### 1. Create New Project
-
-1. Go to https://railway.app
-2. Click "New Project"
-3. Select "Deploy from GitHub repo"
-4. Choose your repository
-
-#### 2. Deploy Backend Service
-
-1. Click "New Service" -> "GitHub Repo" -> Select your repo
-2. Configure the backend service:
+1. Go to https://railway.app and create a new project from your GitHub repo.
+2. Add a service using the `backend` directory:
    - **Name**: `pedalboard-backend`
    - **Root Directory**: `backend`
    - **Build Command**: `pip install uv && uv sync`
    - **Start Command**: `uv run uvicorn main:app --host 0.0.0.0 --port $PORT`
    - **Healthcheck Path**: `/`
+3. Configure variables:
+   - `CORS_ALLOWED_ORIGINS`: include your Cloudflare Pages domain(s), e.g. `https://<your-project>.pages.dev`
+   - Optional: `PYTHON_VERSION=3.11`
+4. Attach a Railway volume if you want uploads or presets to persist across deployments.
+5. Deploy the service and note the public API URL (e.g. `https://pedalboard-backend.up.railway.app`).
 
-3. Add environment variables (optional):
-   - `PYTHON_VERSION`: `3.11`
-   - `PORT`: `8000` (Railway auto-assigns this)
+### Frontend on Cloudflare Pages
 
-4. Railway will auto-detect the Python app and deploy it.
+1. Visit https://dash.cloudflare.com and create a new Pages project.
+2. Connect the same GitHub repository and set the build settings:
+   - **Framework preset**: Vite
+   - **Root directory**: `frontend`
+   - **Build command**: `npm run build`
+   - **Build output directory**: `dist`
+3. Under *Settings → Environment Variables*, set `VITE_API_URL` for both *Preview* and *Production* stages to the Railway backend URL from the previous step.
+4. Deploy. Cloudflare provides preview and production URLs and will automatically issue TLS certificates.
+5. If you later add a custom domain, remember to append it to `CORS_ALLOWED_ORIGINS` on Railway and redeploy the backend.
 
-#### 3. Deploy Frontend Service
+## Railway (Monorepo Alternative)
 
-1. Click "New Service" -> "GitHub Repo" -> Select the same repo
-2. Configure the frontend service:
+If you want everything on Railway, you can deploy the backend and frontend as separate services (or even serve the frontend from FastAPI).
+
+### Option 1: Separate Backend and Frontend Services
+
+1. Create a new Railway project from your GitHub repo.
+2. **Backend service**
+   - **Name**: `pedalboard-backend`
+   - **Root Directory**: `backend`
+   - **Build Command**: `pip install uv && uv sync`
+   - **Start Command**: `uv run uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - Add variables such as `PYTHON_VERSION=3.11` if desired.
+3. **Frontend service**
    - **Name**: `pedalboard-frontend`
    - **Root Directory**: `frontend`
    - **Build Command**: `npm install && npm run build`
    - **Start Command**: `npm run preview -- --host 0.0.0.0 --port $PORT`
+   - Set `VITE_API_URL` to the backend service URL.
+4. On the backend service, set `CORS_ALLOWED_ORIGINS` to include the frontend Railway domain, e.g. `https://<your-frontend-service>.up.railway.app`.
 
-3. Add environment variables:
-   - `VITE_API_URL`: `https://<your-backend-service>.railway.app`
+### Option 2: Single Service Hosting Everything
 
-   Replace `<your-backend-service>` with the URL Railway assigned to your backend service.
-
-4. The frontend will build and deploy automatically.
-
-#### 4. Configure Frontend API URL
-
-Update `frontend/src/api.ts` to use the environment variable:
-
-```typescript
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-```
-
-#### 5. Enable CORS on Backend
-
-Add a `CORS_ALLOWED_ORIGINS` environment variable in Railway (Project Settings → Variables) with your Cloudflare Pages domain, for example:
-
-```
-https://your-project.pages.dev
-```
-
-Multiple origins can be provided by separating them with commas. Local development addresses are already whitelisted.
-
-### Option 2: Single Service Deployment
-
-Alternatively, you can serve the frontend as static files from the backend:
-
-1. Build the frontend:
+1. Build the frontend locally within the deployment:
    ```bash
    cd frontend && npm run build
    ```
-
-2. Update `backend/main.py` to serve static files:
+2. Serve the compiled frontend through FastAPI:
    ```python
    from fastapi.staticfiles import StaticFiles
 
-   # Add after other routes
    app.mount("/", StaticFiles(directory="../frontend/dist", html=True), name="static")
    ```
-
-3. Deploy only the backend with:
+3. Deploy only the backend with a combined build/start command:
    - **Root Directory**: `/`
    - **Build Command**: `cd frontend && npm install && npm run build && cd ../backend && pip install uv && uv sync`
    - **Start Command**: `cd backend && uv run uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-## Cloudflare Pages + Railway
-
-Deploy the frontend on Cloudflare Pages (free, fast CDN) and backend on Railway.
-
-### Backend on Railway
-
-Follow the "Deploy Backend Service" steps from the Railway section above.
-
-### Frontend on Cloudflare Pages
-
-1. Go to https://dash.cloudflare.com
-2. Navigate to Workers & Pages -> Create application -> Pages
-3. Connect to Git -> Select your repository
-4. Configure build settings:
-   - **Framework preset**: Vite
-   - **Build command**: `npm run build`
-   - **Build output directory**: `dist`
-   - **Root directory**: `frontend`
-
-5. Add environment variable:
-   - `VITE_API_URL`: `https://<your-backend-service>.railway.app`
-
-6. Click "Save and Deploy"
-
-7. In Railway, add `CORS_ALLOWED_ORIGINS=https://<your-project>.pages.dev` so the API accepts requests from your Pages deployment (use commas to list multiple domains).
 
 ## Vercel + Railway
 
@@ -133,7 +90,7 @@ Similar to Cloudflare Pages, but using Vercel for the frontend.
 
 ### Backend on Railway
 
-Follow the "Deploy Backend Service" steps from the Railway section.
+Reuse the **Backend on Railway** steps from the recommended setup above.
 
 ### Frontend on Vercel
 
