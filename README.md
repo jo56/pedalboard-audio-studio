@@ -20,9 +20,10 @@ A fullstack web application that provides a UI for manipulating audio files usin
 ### Backend
 - **Python 3.11+**
 - **FastAPI**
+- **uv**
 - **Pedalboard 0.9.8** - Spotify's audio effects library
 - **Uvicorn** - ASGI server
-- **uv**
+
 
 ### Frontend
 - **React 18** with **TypeScript**
