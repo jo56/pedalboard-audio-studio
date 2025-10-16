@@ -240,15 +240,33 @@ function App() {
 
       <main className={cn('max-w-6xl mx-auto px-6 py-6 space-y-6')}>
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-400/40 text-red-200 rounded-lg text-sm">
-            {error}
+          <div className="group p-3 bg-red-500/10 border border-red-400/40 text-red-200 rounded-lg text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <p className="leading-snug">{error}</p>
+              <button
+                type="button"
+                className="ml-2 text-red-200/80 hover:text-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                aria-label="Dismiss error message"
+                onClick={() => setError('')}
+              >
+                ✕
+              </button>
+            </div>
           </div>
         )}
         {successMessage && (
-          <div className={cn('rounded-2xl px-4 py-4 transition-colors duration-300 border', theme.audioPanelClass)}>
-            <p className={cn('text-xs leading-snug', theme.mutedTextClass)}>
-              {successMessage}
-            </p>
+          <div className={cn('group rounded-2xl px-4 py-4 transition-colors duration-300 border', theme.audioPanelClass)}>
+            <div className="flex items-start justify-between gap-3">
+              <p className={cn('text-xs leading-snug', theme.mutedTextClass)}>{successMessage}</p>
+              <button
+                type="button"
+                className="ml-2 text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                aria-label="Dismiss message"
+                onClick={() => setSuccessMessage('')}
+              >
+                ✕
+              </button>
+            </div>
           </div>
         )}
 

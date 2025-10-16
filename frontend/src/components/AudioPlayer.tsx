@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import type { ThemePreset } from '../theme-presets';
 import { cn } from '../utils/classnames';
-import { getMutedWaveColor, getWaveProgressColor } from '../utils/colors';
+import { getMutedWaveColor } from '../utils/colors';
 
 interface AudioPlayerProps {
   audioFile: File | string;
@@ -17,8 +17,12 @@ export default function AudioPlayer({ audioFile, title, theme }: AudioPlayerProp
   const [duration, setDuration] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
 
-  const waveColor = useMemo(() => getMutedWaveColor(theme.waveColor), [theme.waveColor]);
-  const waveProgressColor = useMemo(() => getWaveProgressColor(theme.waveProgressColor), [theme.waveProgressColor]);
+  const accentColor = theme.accentColor ?? theme.waveProgressColor;
+  const waveColor = useMemo(
+    () => getMutedWaveColor(theme.waveColor ?? accentColor),
+    [theme.waveColor, accentColor],
+  );
+  const waveProgressColor = useMemo(() => accentColor, [accentColor]);
 
   useEffect(() => {
     if (!waveformRef.current) return;

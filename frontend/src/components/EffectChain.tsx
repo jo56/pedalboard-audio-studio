@@ -40,8 +40,18 @@ const defaultValueForParam = (paramDef: EffectParam): any => {
 
 const isInteractiveElement = (element: HTMLElement | null): boolean => {
   if (!element) return false;
+
+  // Check if the element itself is an interactive tag
+  const tagName = element.tagName?.toUpperCase();
+  if (tagName === 'INPUT' || tagName === 'SELECT' || tagName === 'TEXTAREA' || tagName === 'BUTTON') {
+    return true;
+  }
+
+  // Check if the element or any ancestor is an interactive element
   return Boolean(
-    element.closest('input, select, textarea, button, [role="slider"], [contenteditable="true"]'),
+    element.closest(
+      'input, select, textarea, button, [role="slider"], [contenteditable="true"], [data-drag-ignore="true"]',
+    ),
   );
 };
 
@@ -162,8 +172,8 @@ export default function EffectChain({
   const hasEffects = effects.length > 0;
 
   return (
-    <div className={cn(panelClass, 'space-y-3 pt-4 pb-6')}>
-      <div className="space-y-1.5 pt-1">
+    <div className={cn(panelClass, 'space-y-3 pt-6 pb-6')}>
+      <div className="space-y-1.5">
         <select
           value={selectedEffectType}
           onChange={(e) => setSelectedEffectType(e.target.value)}
