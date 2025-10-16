@@ -51,8 +51,8 @@ export interface ThemePreset {
 
 export const THEME_PRESETS: ThemePreset[] = [
   {
-    id: "sunsetBloom",
-    name: "Sunset Bloom",
+    id: "sunset",
+    name: "Sunset",
     description: "Warm oranges and pinks with side-by-side layout and soft glass surfaces.",
     layout: "split-left",
     bodyClass: "bg-gradient-to-br from-rose-300 via-orange-300 to-amber-300 text-rose-950",
@@ -90,8 +90,8 @@ export const THEME_PRESETS: ThemePreset[] = [
     controlRowClass: "grid grid-cols-1 sm:grid-cols-3 gap-3",
   },
   {
-    id: "blossomDesk",
-    name: "Blossom Desk",
+    id: "blossom",
+    name: "Blossom",
     description: "Minimal workspace with sunset bloom colors - warm rose and amber tones.",
     layout: "split-left",
     bodyClass: "bg-gradient-to-br from-rose-300 via-stone-400 to-amber-300 text-stone-950",
@@ -129,8 +129,8 @@ export const THEME_PRESETS: ThemePreset[] = [
     controlRowClass: "grid grid-cols-1 sm:grid-cols-3 gap-3",
   },
   {
-    id: "terraDesk",
-    name: "Terra Desk",
+    id: "terra",
+    name: "Terra",
     description: "Warm earthy workspace with terracotta and clay tones.",
     layout: "split-left",
     bodyClass: "bg-gradient-to-br from-orange-300 via-stone-400 to-amber-300 text-stone-950",
@@ -168,8 +168,8 @@ export const THEME_PRESETS: ThemePreset[] = [
     controlRowClass: "grid grid-cols-1 sm:grid-cols-3 gap-3",
   },
   {
-    id: "honeyDesk",
-    name: "Honey Desk",
+    id: "honey",
+    name: "Honey",
     description: "Warm golden workspace with honey and amber accents.",
     layout: "split-left",
     bodyClass: "bg-gradient-to-br from-amber-200 via-stone-300 to-yellow-200 text-stone-900",
@@ -207,8 +207,8 @@ export const THEME_PRESETS: ThemePreset[] = [
     controlRowClass: "grid grid-cols-1 sm:grid-cols-3 gap-3",
   },
   {
-    id: "copperDesk",
-    name: "Copper Desk",
+    id: "copper",
+    name: "Copper",
     description: "Warm metallic workspace with rich copper and bronze tones.",
     layout: "split-left",
     bodyClass: "bg-gradient-to-br from-orange-300 via-stone-400 to-red-200 text-stone-950",
@@ -246,8 +246,8 @@ export const THEME_PRESETS: ThemePreset[] = [
     controlRowClass: "grid grid-cols-1 sm:grid-cols-3 gap-3",
   },
   {
-    id: "mossDesk",
-    name: "Moss Desk",
+    id: "moss",
+    name: "Moss",
     description: "Warm earthy workspace with olive and moss green tones.",
     layout: "split-left",
     bodyClass: "bg-gradient-to-br from-lime-200 via-stone-300 to-green-200 text-stone-950",
@@ -285,8 +285,8 @@ export const THEME_PRESETS: ThemePreset[] = [
     controlRowClass: "grid grid-cols-1 sm:grid-cols-3 gap-3",
   },
   {
-    id: "brickDesk",
-    name: "Brick Desk",
+    id: "brick",
+    name: "Brick",
     description: "Warm workspace with deep red and burgundy brick tones.",
     layout: "split-left",
     bodyClass: "bg-gradient-to-br from-red-200 via-stone-300 to-rose-200 text-stone-950",
@@ -324,8 +324,8 @@ export const THEME_PRESETS: ThemePreset[] = [
     controlRowClass: "grid grid-cols-1 sm:grid-cols-3 gap-3",
   },
   {
-    id: "sandDesk",
-    name: "Sand Desk",
+    id: "sand",
+    name: "Sand",
     description: "Warm neutral workspace with sandy beige and tan tones.",
     layout: "split-left",
     bodyClass: "bg-gradient-to-br from-stone-300 via-neutral-300 to-stone-400 text-stone-950",
@@ -363,8 +363,8 @@ export const THEME_PRESETS: ThemePreset[] = [
     controlRowClass: "grid grid-cols-1 sm:grid-cols-3 gap-3",
   },
   {
-    id: "clayDesk",
-    name: "Clay Desk",
+    id: "clay",
+    name: "Clay",
     description: "Warm earthy workspace with brown and clay terracotta tones.",
     layout: "split-left",
     bodyClass: "bg-gradient-to-br from-amber-200 via-stone-300 to-orange-200 text-stone-950",
@@ -402,8 +402,8 @@ export const THEME_PRESETS: ThemePreset[] = [
     controlRowClass: "grid grid-cols-1 sm:grid-cols-3 gap-3",
   },
   {
-    id: "amberDesk",
-    name: "Amber Desk",
+    id: "amber",
+    name: "Amber",
     description: "Warm glowing workspace with rich amber and orange tones.",
     layout: "split-left",
     bodyClass: "bg-gradient-to-br from-yellow-200 via-stone-300 to-amber-300 text-stone-950",
@@ -441,8 +441,8 @@ export const THEME_PRESETS: ThemePreset[] = [
     controlRowClass: "grid grid-cols-1 sm:grid-cols-3 gap-3",
   },
   {
-    id: "monoDesk",
-    name: "Mono Desk",
+    id: "mono",
+    name: "Mono",
     description: "Ultra-minimal white workstation with slim outlined controls and left-aligned cards.",
     layout: "split-left",
     bodyClass: "bg-[#f5f7fa] text-slate-900",
