@@ -24,11 +24,9 @@ function App() {
   const [successMessage, setSuccessMessage] = useState<string>('');
   const defaultTheme =
     THEME_PRESETS.find((preset) => preset.id === 'clay') ?? THEME_PRESETS[0];
-  const [selectedThemeId, setSelectedThemeId] = useState<string>(defaultTheme.id);
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
-  const theme: ThemePreset =
-    THEME_PRESETS.find((preset) => preset.id === selectedThemeId) ?? defaultTheme;
+  const theme: ThemePreset = defaultTheme;
 
   useEffect(() => {
     const loadEffects = async () => {
@@ -66,7 +64,7 @@ function App() {
     try {
       const response = await audioAPI.uploadFile(file);
       setFileId(response.file_id);
-      setSuccessMessage('File uploaded successfully!');
+      setSuccessMessage('File uploaded successfully');
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to upload file';
       setError(`Upload failed: ${errorMessage}`);
@@ -103,7 +101,7 @@ function App() {
     setError('');
 
     if (!fileId) {
-      setSuccessMessage('Effects cleared.');
+      setSuccessMessage('Effects cleared');
       return;
     }
 
@@ -117,7 +115,7 @@ function App() {
       }
     }
 
-    setSuccessMessage('Effects cleared. Processed audio removed.');
+    setSuccessMessage('Effects cleared. Processed audio removed');
   };
 
   const handleExportEffects = () => {
@@ -142,7 +140,7 @@ function App() {
       document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
 
-      setSuccessMessage('Effect settings exported successfully.');
+      setSuccessMessage('Effect settings exported successfully');
       setError('');
     } catch (err) {
       console.error('Export failed:', err);
@@ -242,13 +240,33 @@ function App() {
 
       <main className={cn('max-w-6xl mx-auto px-6 py-6 space-y-6')}>
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-400/40 text-red-200 rounded-lg text-sm">
-            {error}
+          <div className="group p-3 bg-red-500/10 border border-red-400/40 text-red-200 rounded-lg text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <p className="leading-snug flex-1">{error}</p>
+              <button
+                type="button"
+                className="flex-shrink-0 text-red-200/80 hover:text-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                aria-label="Dismiss error message"
+                onClick={() => setError('')}
+              >
+                ✕
+              </button>
+            </div>
           </div>
         )}
         {successMessage && (
-          <div className={cn('rounded-3xl p-5 transition-colors duration-300 border', theme.audioPanelClass)}>
-            <p className='text-sm font-medium text-slate-800 dark:text-slate-100'>{successMessage}</p>
+          <div className={cn('group rounded-2xl px-4 py-4 transition-colors duration-300 border', theme.audioPanelClass)}>
+            <div className="flex items-center justify-between gap-3">
+              <p className={cn('text-xs leading-snug flex-1', theme.mutedTextClass)}>{successMessage}</p>
+              <button
+                type="button"
+                className="flex-shrink-0 text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                aria-label="Dismiss message"
+                onClick={() => setSuccessMessage('')}
+              >
+                ✕
+              </button>
+            </div>
           </div>
         )}
 
@@ -266,7 +284,7 @@ function App() {
           </div>
 
           <div className={theme.mainWrapperClass}>
-            <div className={cn('rounded-3xl p-6 space-y-5 transition-colors duration-300 border', theme.mainPanelClass)}>
+            <div className={cn('rounded-3xl p-6 space-y-4 transition-colors duration-300 border', theme.mainPanelClass)}>
               {!uploadedFile ? (
                 <FileUpload onFileSelected={handleFileSelected} isProcessing={isProcessing} theme={theme} />
               ) : (
@@ -294,7 +312,7 @@ function App() {
                         Reset
                       </button>
                     </div>
-                    <p className={cn('text-xs text-slate-700 dark:text-slate-200', theme.mutedTextClass)}>
+                    <p className={cn('text-xs leading-snug', theme.mutedTextClass)}>
                       Process renders the current chain against the uploaded audio. Export your chain to
                       reuse settings across sessions or in code.
                     </p>

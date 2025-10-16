@@ -117,24 +117,24 @@ export const getWaveProgressColor = (color: string): string => {
   const rgb = parseColor(color);
   if (!rgb) return 'rgba(20, 32, 56, 0.96)';
 
-  const darkAnchor: RgbColor = { r: 16, g: 24, b: 39 };
-  const lightAnchor: RgbColor = { r: 236, g: 240, b: 247 };
+  const darkAnchor: RgbColor = { r: 124, g: 45, b: 18 };
+  const lightAnchor: RgbColor = { r: 232, g: 121, b: 33 };
   const luminance = relativeLuminance(rgb);
 
   if (luminance >= 0.6) {
-    const emphasis = mixRgb(rgb, darkAnchor, 0.68);
-    return toRgbaString(emphasis, 0.98);
+    const emphasis = mixRgb(rgb, darkAnchor, 0.8);
+    return toRgbaString(emphasis, 0.88);
   }
 
   if (luminance <= 0.25) {
-    const emphasis = mixRgb(rgb, lightAnchor, 0.32);
-    return toRgbaString(emphasis, 0.9);
+    const emphasis = mixRgb(rgb, lightAnchor, 0.45);
+    return toRgbaString(emphasis, 0.85);
   }
 
   const anchor = luminance > 0.45 ? darkAnchor : lightAnchor;
-  const amount = luminance > 0.45 ? 0.55 : 0.4;
+  const amount = luminance > 0.45 ? 0.7 : 0.55;
   const target = mixRgb(rgb, anchor, amount);
-  const alpha = luminance > 0.45 ? 0.95 : 0.92;
+  const alpha = luminance > 0.45 ? 0.88 : 0.85;
   return toRgbaString(target, alpha);
 };
 

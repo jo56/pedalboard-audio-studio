@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import type { DragEvent } from 'react';
 import type { EffectConfig, AvailableEffects, EffectParam } from '../types';
 import EffectControl from './EffectControl';
@@ -38,11 +38,16 @@ const defaultValueForParam = (paramDef: EffectParam): any => {
   }
 };
 
-const isInteractiveElement = (element: HTMLElement | null): boolean => {
+const isDragHandle = (element: HTMLElement | null): boolean => {
   if (!element) return false;
-  return Boolean(
-    element.closest('input, select, textarea, button, [role="slider"], [contenteditable="true"]'),
-  );
+
+  // Don't allow dragging from buttons
+  if (element.tagName?.toUpperCase() === 'BUTTON' || element.closest('button')) {
+    return false;
+  }
+
+  // Check if this element or any parent is the drag handle (the header area)
+  return Boolean(element.closest('[data-drag-handle="true"]'));
 };
 
 export default function EffectChain({
@@ -90,7 +95,18 @@ export default function EffectChain({
   };
 
   const handleDragStart = (id: string) => (event: DragEvent<HTMLDivElement>) => {
-    if (isInteractiveElement(event.target as HTMLElement)) {
+    const target = event.target as HTMLElement;
+    const isHandle = isDragHandle(target);
+
+    console.log('Drag attempt:', {
+      target: target.tagName,
+      className: target.className,
+      isHandle,
+      hasDragHandleAttr: Boolean(target.closest('[data-drag-handle="true"]')),
+    });
+
+    // Only allow dragging if started from the drag handle (the header area)
+    if (!isHandle) {
       event.preventDefault();
       return;
     }
@@ -162,7 +178,7 @@ export default function EffectChain({
   const hasEffects = effects.length > 0;
 
   return (
-    <div className={cn(panelClass, 'space-y-3 pb-6')}>
+    <div className={cn(panelClass, 'space-y-3 pt-6 pb-6')}>
       <div className="space-y-1.5">
         <select
           value={selectedEffectType}
@@ -256,8 +272,8 @@ export default function EffectChain({
             })}
           </div>
 
-          <p className={cn('mt-3 text-[11px] text-slate-700 dark:text-slate-200', theme.mutedTextClass)}>
-            Drag any effect card to change its position. The chain updates as you move.
+          <p className={cn('mt-3 text-xs leading-snug', theme.mutedTextClass)}>
+            Drag the header of any effect to change its position. The chain updates as you move.
           </p>
         </>
       )}

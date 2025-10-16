@@ -181,8 +181,8 @@ export default function EffectControl({
 
   return (
     <div className={cn('p-3 transition-colors duration-200', className)}>
-      <div className="flex items-start justify-between mb-2">
-        <div>
+      <div className="flex items-start justify-between mb-2 cursor-move" data-drag-handle="true" draggable="true">
+        <div className="flex-1">
           <h4 className={cn('text-xs font-semibold', theme.headingTextClass)}>{definition.name}</h4>
           <p className={cn('text-xs', theme.mutedTextClass)}>{definition.description}</p>
           {definition.tags && definition.tags.length > 0 && (
@@ -203,7 +203,7 @@ export default function EffectControl({
         </div>
         <button
           onClick={onRemove}
-          className={cn('ml-2 transition-colors', theme.mutedTextClass, 'hover:text-red-400')}
+          className={cn('ml-2 transition-colors flex-shrink-0', theme.mutedTextClass, 'hover:text-red-400')}
           title="Remove"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
