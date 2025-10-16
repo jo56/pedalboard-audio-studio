@@ -383,7 +383,7 @@ function App() {
     setIsProcessedAudioReady(false);
     setPendingSuccessMessage('');
     setError('');
-    setSuccessMessage('');
+    setSuccessMessage('Audio cleared');
   };
 
   const baseButtonClass =
