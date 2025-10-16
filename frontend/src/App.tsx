@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, MouseEvent } from 'react';
 import FileUpload from './components/FileUpload';
 import AudioPlayer from './components/AudioPlayer';
 import EffectChain from './components/EffectChain';
@@ -235,10 +235,45 @@ function App() {
     }
   };
 
-  const handleDownload = () => {
-    if (processedAudioUrl) {
-      window.open(processedAudioUrl, '_blank');
+  const handleDownload = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+
+    if (!processedAudioUrl) {
+      return;
     }
+
+    void (async () => {
+      try {
+        const response = await fetch(processedAudioUrl);
+
+        if (!response.ok) {
+          throw new Error(`Download failed with status ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+
+        if (uploadedFile) {
+          const extensionIndex = uploadedFile.name.lastIndexOf('.');
+          const hasExtension = extensionIndex > -1;
+          const baseName = hasExtension ? uploadedFile.name.slice(0, extensionIndex) : uploadedFile.name;
+          const extension = hasExtension ? uploadedFile.name.slice(extensionIndex) : '.wav';
+          anchor.download = `${baseName}-processed${extension}`;
+        } else {
+          anchor.download = 'processed-audio.wav';
+        }
+
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Download failed:', err);
+        setError('Failed to download processed audio. Please try again.');
+      }
+    })();
   };
 
   const handleReset = () => {
