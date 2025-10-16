@@ -23,7 +23,7 @@ function App() {
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
   const defaultTheme =
-    THEME_PRESETS.find((preset) => preset.id === 'copper') ?? THEME_PRESETS[0];
+    THEME_PRESETS.find((preset) => preset.id === 'clay') ?? THEME_PRESETS[0];
   const [selectedThemeId, setSelectedThemeId] = useState<string>(defaultTheme.id);
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -235,26 +235,8 @@ function App() {
           headerUsesLightText && 'text-white/90',
         )}
       >
-        <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-            <h1 className={cn('text-2xl font-semibold min-w-0', theme.headerTitleClass)}>Pedalboard Audio Studio</h1>
-            <div className="flex items-center justify-self-end">
-              <select
-                value={selectedThemeId}
-                onChange={(event) => setSelectedThemeId(event.target.value)}
-                className={cn(
-                  'px-3 py-2 text-sm rounded transition-colors focus:outline-none',
-                  theme.selectClass,
-                )}
-              >
-                {THEME_PRESETS.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          <h1 className={cn('text-2xl font-semibold', theme.headerTitleClass)}>Pedalboard Audio Studio</h1>
         </div>
       </header>
 
@@ -266,7 +248,7 @@ function App() {
         )}
         {successMessage && (
           <div className={cn('rounded-3xl p-5 transition-colors duration-300 border', theme.audioPanelClass)}>
-            <p className="text-sm font-medium">{successMessage}</p>
+            <p className='text-sm font-medium text-slate-800 dark:text-slate-100'>{successMessage}</p>
           </div>
         )}
 
@@ -312,7 +294,7 @@ function App() {
                         Reset
                       </button>
                     </div>
-                    <p className={cn('text-xs', theme.mutedTextClass)}>
+                    <p className={cn('text-xs text-slate-700 dark:text-slate-200', theme.mutedTextClass)}>
                       Process renders the current chain against the uploaded audio. Export your chain to
                       reuse settings across sessions or in code.
                     </p>
