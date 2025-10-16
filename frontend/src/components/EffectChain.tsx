@@ -160,9 +160,10 @@ export default function EffectChain({
   const compactActionButtonClass =
     'w-full min-h-[2.65rem] px-4 text-xs sm:text-sm flex items-center justify-center whitespace-nowrap';
   const hasEffects = effects.length > 0;
+  const infoTextClass = 'text-[11px] font-medium text-slate-800 dark:text-slate-200 leading-snug';
 
   return (
-    <div className={cn(panelClass, 'space-y-3 py-5')}>
+    <div className={cn(panelClass, 'space-y-3 py-4')}>
       <div className="space-y-1.5">
         <select
           value={selectedEffectType}
@@ -256,7 +257,7 @@ export default function EffectChain({
             })}
           </div>
 
-          <p className={cn('mt-2 text-[11px] font-medium text-slate-800 dark:text-slate-100 leading-snug', theme.mutedTextClass)}>
+          <p className={cn('mt-3', infoTextClass)}>
             Drag any effect card to change its position. The chain updates as you move.
           </p>
         </>
