@@ -19,9 +19,12 @@ function App() {
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [uploadAnimationIndex, setUploadAnimationIndex] = useState(0);
   const [errorFading, setErrorFading] = useState(false);
   const [successFading, setSuccessFading] = useState(false);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const uploadAnimationRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const theme: ThemePreset = DEFAULT_THEME;
 
   useEffect(() => {
@@ -71,6 +74,31 @@ function App() {
     }
   }, [successMessage]);
 
+  useEffect(() => {
+    if (!isUploadingFile) {
+      if (uploadAnimationRef.current) {
+        clearInterval(uploadAnimationRef.current);
+        uploadAnimationRef.current = null;
+      }
+      setUploadAnimationIndex(0);
+      return;
+    }
+
+    if (uploadAnimationRef.current) {
+      clearInterval(uploadAnimationRef.current);
+    }
+
+    const intervalId = window.setInterval(() => {
+      setUploadAnimationIndex((prev) => (prev + 1) % 3);
+    }, 500);
+    uploadAnimationRef.current = intervalId;
+
+    return () => {
+      clearInterval(intervalId);
+      uploadAnimationRef.current = null;
+    };
+  }, [isUploadingFile]);
+
   const invalidateProcessedAudio = () => {
     if (processedAudioUrl) {
       setProcessedAudioUrl('');
@@ -91,6 +119,7 @@ function App() {
     setUploadedFile(null);
     setProcessedAudioUrl('');
     setFileId('');
+    setIsUploadingFile(true);
 
     try {
       const response = await audioAPI.uploadFile(file);
@@ -107,6 +136,8 @@ function App() {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to upload file';
       setError(`Upload failed: ${errorMessage}`);
       console.error('Upload error:', err);
+    } finally {
+      setIsUploadingFile(false);
     }
   };
 
@@ -296,6 +327,7 @@ function App() {
   const secondaryButtonClass = cn(baseButtonClass, theme.buttonSecondaryClass);
   const ghostButtonClass = cn(baseButtonClass, theme.buttonGhostClass);
   const headerUsesLightText = theme.headerTitleClass.includes('text-white');
+  const uploadingMessage = isUploadingFile ? `Uploading file${'.'.repeat((uploadAnimationIndex % 3) + 1)}` : '';
 
   return (
     <div className={cn('min-h-screen transition-colors duration-500', theme.bodyClass)}>
@@ -330,6 +362,24 @@ function App() {
               >
                 ✕
               </button>
+            </div>
+          </div>
+        )}
+        {isUploadingFile && (
+          <div
+            className={cn(
+              'group rounded-2xl px-4 py-4 transition-all duration-500 border',
+              theme.audioPanelClass,
+            )}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className={cn('text-xs leading-snug flex-1', theme.mutedTextClass)}>{uploadingMessage}</p>
+              <span
+                className="flex-shrink-0 text-slate-500 dark:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                aria-hidden="true"
+              >
+                ...
+              </span>
             </div>
           </div>
         )}
