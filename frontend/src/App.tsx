@@ -101,7 +101,7 @@ function App() {
     setError('');
 
     if (!fileId) {
-      setSuccessMessage('Effects cleared.');
+      setSuccessMessage('Effects cleared');
       return;
     }
 
@@ -115,7 +115,7 @@ function App() {
       }
     }
 
-    setSuccessMessage('Effects cleared. Processed audio removed.');
+    setSuccessMessage('Effects cleared. Processed audio removed');
   };
 
   const handleExportEffects = () => {
@@ -140,7 +140,7 @@ function App() {
       document.body.removeChild(anchor);
       URL.revokeObjectURL(url);
 
-      setSuccessMessage('Effect settings exported successfully.');
+      setSuccessMessage('Effect settings exported successfully');
       setError('');
     } catch (err) {
       console.error('Export failed:', err);
