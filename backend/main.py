@@ -20,9 +20,20 @@ from presets import (
 app = FastAPI(title="Pedalboard Audio Processor API")
 
 # CORS configuration for frontend
+_DEFAULT_CORS_ORIGINS = ["http://localhost:5173", "http://localhost:3000"]
+cors_origins_raw = os.getenv("CORS_ALLOWED_ORIGINS", "")
+if cors_origins_raw:
+    cors_origins = [
+        origin.strip()
+        for origin in cors_origins_raw.split(",")
+        if origin.strip()
+    ] or _DEFAULT_CORS_ORIGINS
+else:
+    cors_origins = _DEFAULT_CORS_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Vite default port
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

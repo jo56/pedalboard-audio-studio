@@ -71,22 +71,13 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 #### 5. Enable CORS on Backend
 
-Update `backend/main.py` to allow your frontend domain:
+Add a `CORS_ALLOWED_ORIGINS` environment variable in Railway (Project Settings → Variables) with your Cloudflare Pages domain, for example:
 
-```python
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://<your-frontend-service>.railway.app"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 ```
+https://your-project.pages.dev
+```
+
+Multiple origins can be provided by separating them with commas. Local development addresses are already whitelisted.
 
 ### Option 2: Single Service Deployment
 
@@ -134,12 +125,7 @@ Follow the "Deploy Backend Service" steps from the Railway section above.
 
 6. Click "Save and Deploy"
 
-7. Update CORS settings in `backend/main.py` to include your Cloudflare Pages URL:
-   ```python
-   allow_origins=[
-       "https://<your-project>.pages.dev"
-   ]
-   ```
+7. In Railway, add `CORS_ALLOWED_ORIGINS=https://<your-project>.pages.dev` so the API accepts requests from your Pages deployment (use commas to list multiple domains).
 
 ## Vercel + Railway
 
@@ -165,12 +151,7 @@ Follow the "Deploy Backend Service" steps from the Railway section.
 
 6. Click "Deploy"
 
-7. Update CORS in `backend/main.py` to include your Vercel domain:
-   ```python
-   allow_origins=[
-       "https://<your-project>.vercel.app"
-   ]
-   ```
+7. Add `CORS_ALLOWED_ORIGINS=https://<your-project>.vercel.app` in Railway so the backend accepts calls from the Vercel deployment.
 
 ## Render (Alternative)
 
@@ -207,28 +188,18 @@ All deployment options above use **ephemeral storage**, meaning uploaded files w
 **Backend:**
 - `PORT`: Auto-assigned by platform
 - `PYTHON_VERSION`: `3.11` (optional, usually auto-detected)
+- `CORS_ALLOWED_ORIGINS`: Comma-separated list of production frontend origins (for example `https://your-project.pages.dev`)
 
 **Frontend:**
 - `VITE_API_URL`: Your backend API URL
 
+### Environment Files
+
+Copy the provided `.env.example` files in `backend/` and `frontend/` as a starting point for local development or to document the variables you set in each hosting provider’s dashboard.
+
 ### CORS Configuration
 
-Always update your backend's CORS settings to include your frontend domain:
-
-```python
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",           # Local development
-        "https://your-frontend.com"        # Production
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
+Always set the backend `CORS_ALLOWED_ORIGINS` environment variable with every production frontend domain (comma separated). The defaults already cover local development addresses.
 
 ## Testing Your Deployment
 
@@ -253,8 +224,7 @@ After deployment:
 - Ensure API endpoints are accessible
 
 ### CORS errors:
-- Add your frontend domain to backend's CORS allowed origins
-- Redeploy backend after CORS changes
+- Confirm `CORS_ALLOWED_ORIGINS` on the backend includes the frontend domain and redeploy after updating the variable.
 
 ## Cost Estimates
 

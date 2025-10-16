@@ -77,6 +77,7 @@ uv run uvicorn main:app --reload
 ```
 
 The backend will be available at `http://localhost:8000`.
+Create a `.env` file (see `backend/.env.example`) to list any production origins that should be allowed through CORS, e.g. your Cloudflare Pages URL.
 
 ### Frontend Setup
 
@@ -87,6 +88,7 @@ npm run dev
 ```
 
 The frontend will be available at `http://localhost:5173`.
+Duplicate `frontend/.env.example` to `.env` (or `.env.production`) and point `VITE_API_URL` at the deployed backend when building for Cloudflare Pages.
 
 ## Usage
 
@@ -171,12 +173,21 @@ Example preset creation payload:
 
 ## Deployment
 
-For production deployment instructions, see **[DEPLOYMENT.md](./DEPLOYMENT.md)** which covers:
+### Recommended: Railway backend + Cloudflare Pages frontend
 
-- Railway (fullstack deployment - recommended)
-- Cloudflare Pages + Railway
-- Vercel + Railway
-- Render and other alternatives
+1. Push this repository to GitHub so both platforms can access it.
+2. **Railway (backend)**  
+   - Create a new service from the `backend/` directory.  
+   - Set the build command to `pip install uv && uv sync` and the start command to `uv run uvicorn main:app --host 0.0.0.0 --port $PORT`.  
+   - Add an environment variable `CORS_ALLOWED_ORIGINS` listing your Cloudflare Pages domain (comma separated if you have multiple origins).  
+   - Attach a volume if you need processed audio or presets to persist across deployments.
+3. **Cloudflare Pages (frontend)**  
+   - Create a Pages project from the same repo and set the root directory to `frontend`.  
+   - Use `npm run build` as the build command and `dist` as the output directory.  
+   - Define `VITE_API_URL` (for both Preview and Production environments) with the public Railway URL from step 2.
+4. Rebuild both services. The frontend will talk to the backend via the configured API URL with CORS automatically satisfied.
+
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for alternate topologies (single-service Railway, Vercel, Render, Fly.io, AWS) and additional configuration tips.
 
 ## Development Notes
 
