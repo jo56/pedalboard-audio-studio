@@ -256,7 +256,7 @@ export default function EffectChain({
             })}
           </div>
 
-          <p className={cn('mt-3 text-[11px] text-slate-700 dark:text-slate-200', theme.mutedTextClass)}>
+          <p className={cn('mt-3 text-[11px] text-slate-700 dark:text-slate-200 leading-relaxed', theme.mutedTextClass)}>
             Drag any effect card to change its position. The chain updates as you move.
           </p>
         </>

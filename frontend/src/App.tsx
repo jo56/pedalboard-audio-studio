@@ -64,7 +64,7 @@ function App() {
     try {
       const response = await audioAPI.uploadFile(file);
       setFileId(response.file_id);
-      setSuccessMessage('File uploaded successfully!');
+      setSuccessMessage('File uploaded successfully');
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to upload file';
       setError(`Upload failed: ${errorMessage}`);
@@ -245,8 +245,10 @@ function App() {
           </div>
         )}
         {successMessage && (
-          <div className={cn('rounded-3xl p-5 transition-colors duration-300 border', theme.audioPanelClass)}>
-            <p className='text-sm font-medium text-slate-900 dark:text-slate-100'>{successMessage}</p>
+          <div className={cn('rounded-2xl px-4 py-4 transition-colors duration-300 border', theme.audioPanelClass)}>
+            <p className={cn('text-sm text-slate-700 dark:text-slate-200 leading-snug', theme.mutedTextClass)}>
+              {successMessage}
+            </p>
           </div>
         )}
 
@@ -264,7 +266,7 @@ function App() {
           </div>
 
           <div className={theme.mainWrapperClass}>
-            <div className={cn('rounded-3xl p-6 space-y-5 transition-colors duration-300 border', theme.mainPanelClass)}>
+            <div className={cn('rounded-3xl p-6 space-y-4 transition-colors duration-300 border', theme.mainPanelClass)}>
               {!uploadedFile ? (
                 <FileUpload onFileSelected={handleFileSelected} isProcessing={isProcessing} theme={theme} />
               ) : (
@@ -292,7 +294,7 @@ function App() {
                         Reset
                       </button>
                     </div>
-                    <p className={cn('text-xs text-slate-900 dark:text-slate-100', theme.mutedTextClass)}>
+                    <p className={cn('text-xs text-slate-700 dark:text-slate-200 leading-relaxed', theme.mutedTextClass)}>
                       Process renders the current chain against the uploaded audio. Export your chain to
                       reuse settings across sessions or in code.
                     </p>
