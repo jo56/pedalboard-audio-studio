@@ -305,15 +305,18 @@ function App() {
 
       <main className={cn('max-w-6xl mx-auto px-6 py-6 space-y-6')}>
         {error && (
-          <div className={cn(
-            'group p-3 bg-red-500/10 border border-red-400/40 text-red-200 rounded-lg text-sm transition-opacity duration-500',
-            errorFading && 'opacity-0'
-          )}>
+          <div
+            className={cn(
+              'group rounded-2xl px-4 py-4 transition-all duration-500 border shadow-lg border-[#b45309]',
+              theme.audioPanelClass,
+              errorFading && 'opacity-0',
+            )}
+          >
             <div className="flex items-center justify-between gap-3">
-              <p className="leading-snug flex-1">{error}</p>
+              <p className="text-xs leading-snug flex-1 font-medium text-[#7c2d12]">{error}</p>
               <button
                 type="button"
-                className="flex-shrink-0 text-red-200/80 hover:text-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                className="flex-shrink-0 text-[#b45309] hover:text-[#7c2d12] opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                 aria-label="Dismiss error message"
                 onClick={() => setError('')}
               >
