@@ -35,12 +35,12 @@ This is the recommended approach for maximum flexibility.
 2. Configure the backend service:
    - **Name**: `pedalboard-backend`
    - **Root Directory**: `backend`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Build Command**: `pip install uv && uv sync`
+   - **Start Command**: `uv run uvicorn main:app --host 0.0.0.0 --port $PORT`
    - **Healthcheck Path**: `/`
 
 3. Add environment variables (optional):
-   - `PYTHON_VERSION`: `3.10`
+   - `PYTHON_VERSION`: `3.11`
    - `PORT`: `8000` (Railway auto-assigns this)
 
 4. Railway will auto-detect the Python app and deploy it.
@@ -107,8 +107,8 @@ Alternatively, you can serve the frontend as static files from the backend:
 
 3. Deploy only the backend with:
    - **Root Directory**: `/`
-   - **Build Command**: `cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt`
-   - **Start Command**: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Build Command**: `cd frontend && npm install && npm run build && cd ../backend && pip install uv && uv sync`
+   - **Start Command**: `cd backend && uv run uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 ## Cloudflare Pages + Railway
 
@@ -185,8 +185,8 @@ Render is an alternative to Railway for the backend.
    - **Name**: `pedalboard-backend`
    - **Root Directory**: `backend`
    - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Build Command**: `pip install uv && uv sync`
+   - **Start Command**: `uv run uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 5. Click "Create Web Service"
 
@@ -206,7 +206,7 @@ All deployment options above use **ephemeral storage**, meaning uploaded files w
 
 **Backend:**
 - `PORT`: Auto-assigned by platform
-- `PYTHON_VERSION`: `3.10` (optional, usually auto-detected)
+- `PYTHON_VERSION`: `3.11` (optional, usually auto-detected)
 
 **Frontend:**
 - `VITE_API_URL`: Your backend API URL
@@ -244,8 +244,8 @@ After deployment:
 
 ### Backend issues:
 - Check Railway/Render logs for Python errors
-- Verify `requirements.txt` is in the root of `backend/`
-- Ensure `uvicorn` is listed in requirements
+- Verify `pyproject.toml` is in the root of `backend/`
+- Ensure `uvicorn` is listed in the `project.dependencies` section
 
 ### Frontend issues:
 - Verify `VITE_API_URL` is set correctly

@@ -18,7 +18,7 @@ A fullstack web application that provides a beautiful UI for manipulating audio 
 ## Tech Stack
 
 ### Backend
-- **Python 3.10+**
+- **Python 3.11+**
 - **FastAPI** – Modern, fast web framework
 - **Pedalboard 0.9.8** – Spotify's audio effects library
 - **Uvicorn** – ASGI server
@@ -38,7 +38,7 @@ pedalboard-test/
 |   |-- main.py             # FastAPI server
 |   |-- effects.py          # Effect registry and processing
 |   |-- presets.py          # Preset persistence helpers
-|   |-- requirements.txt    # Python dependencies
+|   |-- pyproject.toml      # Python dependencies managed by uv
 |   |-- uploads/            # Uploaded audio (runtime)
 |   |-- processed/          # Processed audio (runtime)
 |   |-- impulses/           # Impulse responses for convolution effects
@@ -62,7 +62,8 @@ pedalboard-test/
 
 ### Prerequisites
 
-- Python 3.10 or higher
+- Python 3.11 or higher
+- [uv](https://github.com/astral-sh/uv) (for Python environment and dependency management)
 - Node.js 16 or higher
 - npm (or yarn/pnpm)
 
@@ -70,11 +71,9 @@ pedalboard-test/
 
 ```bash
 cd backend
-python -m venv venv
-venv\\Scripts\\activate  # Windows
-# source venv/bin/activate # macOS/Linux
-pip install -r requirements.txt
-python main.py
+uv python install 3.11
+uv sync
+uv run uvicorn main:app --reload
 ```
 
 The backend will be available at `http://localhost:8000`.
