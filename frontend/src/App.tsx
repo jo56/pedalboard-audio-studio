@@ -21,10 +21,13 @@ function App() {
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
-  const [selectedThemeId, setSelectedThemeId] = useState<string>(THEME_PRESETS[0].id);
+  const defaultTheme =
+    THEME_PRESETS.find((preset) => preset.id === 'copper') ?? THEME_PRESETS[0];
+  const [selectedThemeId, setSelectedThemeId] = useState<string>(defaultTheme.id);
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
-  const theme: ThemePreset = THEME_PRESETS.find((preset) => preset.id === selectedThemeId) ?? THEME_PRESETS[0];
+  const theme: ThemePreset =
+    THEME_PRESETS.find((preset) => preset.id === selectedThemeId) ?? defaultTheme;
 
   useEffect(() => {
     const loadEffects = async () => {
