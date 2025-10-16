@@ -1,5 +1,7 @@
 ﻿# Pedalboard Audio Studio
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 A fullstack web application that provides a beautiful UI for manipulating audio files using [Spotify's Pedalboard](https://github.com/spotify/pedalboard) library. Upload audio files, design complex pedal chains, host VST3 plugins, and save reusable presets.
 
 ## Features
@@ -195,7 +197,9 @@ For production deployment instructions, see **[DEPLOYMENT.md](./DEPLOYMENT.md)**
 
 ## License
 
-This project uses Spotify's Pedalboard library. Refer to the [Pedalboard license](https://github.com/spotify/pedalboard/blob/master/LICENSE) for details.
+MIT License - Copyright (c) 2025 John O'Farrell
+
+This project uses Spotify's Pedalboard library. Refer to the [Pedalboard license](https://github.com/spotify/pedalboard/blob/master/LICENSE) for details on that dependency.
 
 ## Acknowledgments
 

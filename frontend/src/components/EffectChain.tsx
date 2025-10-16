@@ -95,18 +95,8 @@ export default function EffectChain({
   };
 
   const handleDragStart = (id: string) => (event: DragEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLElement;
-    const isHandle = isDragHandle(target);
-
-    console.log('Drag attempt:', {
-      target: target.tagName,
-      className: target.className,
-      isHandle,
-      hasDragHandleAttr: Boolean(target.closest('[data-drag-handle="true"]')),
-    });
-
     // Only allow dragging if started from the drag handle (the header area)
-    if (!isHandle) {
+    if (!isDragHandle(event.target as HTMLElement)) {
       event.preventDefault();
       return;
     }
