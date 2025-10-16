@@ -220,17 +220,21 @@ function App() {
   const primaryButtonClass = cn(baseButtonClass, theme.buttonPrimaryClass);
   const secondaryButtonClass = cn(baseButtonClass, theme.buttonSecondaryClass);
   const ghostButtonClass = cn(baseButtonClass, theme.buttonGhostClass);
+  const headerUsesLightText = theme.headerTitleClass.includes('text-white');
 
   return (
     <div className={cn('min-h-screen transition-colors duration-500', theme.bodyClass)}>
-      <header className={cn('transition-colors duration-500 border-b', theme.headerClass)}>
+      <header
+        className={cn(
+          'transition-colors duration-500 border-b',
+          theme.headerClass,
+          headerUsesLightText && 'text-white/90',
+        )}
+      >
         <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <h1 className={cn('text-2xl font-semibold', theme.headerTitleClass)}>Pedalboard Audio Studio</h1>
             <div className="flex items-center gap-3">
-              <label className={cn('text-xs uppercase tracking-wide', theme.mutedTextClass)}>
-                Theme
-              </label>
               <select
                 value={selectedThemeId}
                 onChange={(event) => setSelectedThemeId(event.target.value)}
@@ -247,7 +251,6 @@ function App() {
               </select>
             </div>
           </div>
-          <p className={cn('text-xs max-w-3xl', theme.mutedTextClass)}>{theme.description}</p>
         </div>
       </header>
 

@@ -179,26 +179,30 @@ export default function EffectChain({
               </option>
             ))}
         </select>
-        <div className="flex gap-2">
-          <button onClick={addEffect} disabled={!selectedEffectType} className={primaryButtonClass}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button
+            onClick={addEffect}
+            disabled={!selectedEffectType}
+            className={cn(primaryButtonClass, 'w-full')}
+            type="button"
+          >
             Add Effect
           </button>
           <button
             onClick={onClearEffects}
             disabled={effects.length === 0}
-            className={secondaryButtonClass}
+            className={cn(secondaryButtonClass, 'w-full')}
+            type="button"
           >
             Clear All Effects
           </button>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={onImportEffects} className={ghostButtonClass} type="button">
+          <button onClick={onImportEffects} className={cn(ghostButtonClass, 'w-full')} type="button">
             Import Settings
           </button>
           <button
             onClick={onExportEffects}
             disabled={effects.length === 0}
-            className={ghostButtonClass}
+            className={cn(ghostButtonClass, 'w-full')}
             type="button"
           >
             Export Settings
