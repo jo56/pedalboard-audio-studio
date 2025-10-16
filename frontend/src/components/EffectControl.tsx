@@ -193,7 +193,11 @@ export default function EffectControl({
 
   return (
     <div className={cn('p-3 transition-colors duration-200', className)}>
-      <div className="flex items-start justify-between mb-2">
+      <div
+        className="flex items-start justify-between mb-2"
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+      >
         <div>
           <h4 className={cn('text-xs font-semibold', theme.headingTextClass)}>{definition.name}</h4>
           <p className={cn('text-xs', theme.mutedTextClass)}>{definition.description}</p>
@@ -224,7 +228,17 @@ export default function EffectControl({
         </button>
       </div>
 
-      <div className="space-y-2">
+      <div
+        className="space-y-2"
+        draggable={false}
+        data-no-drag="true"
+        onDragStart={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+      >
         {Object.entries(definition.params).map(([paramName, paramDef]) => {
           const currentValue =
             effect.params[paramName] ?? resolveDefaultValue(paramName, paramDef);

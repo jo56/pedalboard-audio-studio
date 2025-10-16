@@ -47,6 +47,11 @@ const isInteractiveElement = (element: HTMLElement | null): boolean => {
     return true;
   }
 
+  // Check if element is within a no-drag zone
+  if (element.closest('[data-no-drag="true"]')) {
+    return true;
+  }
+
   // Check if the element or any ancestor is an interactive element
   return Boolean(
     element.closest(
