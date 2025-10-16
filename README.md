@@ -1,4 +1,4 @@
-﻿# Pedalboard Audio Studio
+# Pedalboard Audio Studio
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
@@ -6,22 +6,22 @@ A fullstack web application that provides a beautiful UI for manipulating audio 
 
 ## Features
 
-- **Drag & Drop File Upload** – MP3, WAV, FLAC, OGG, and M4A support
-- **Visual Waveform Display** – Real-time waveform visualization with playback controls
-- **Comprehensive Pedalboard Coverage** – 24 native effects including dynamics, filters, modulation, convolution IRs, GSM codec emulation, and more
-- **External VST3 Hosting** – Drop compatible plugins in `backend/plugins` and use them in any chain
-- **Effect Chain Builder** – Add, remove, and reorder effects with ease
-- **Typed Parameter Controls** – Sliders, toggles, selects, and text inputs adjust parameters with live feedback
-- **Preset Management** – Save, list, download, and reuse effect chains through the API
-- **Download Processed Audio** – Export processed audio with a single click
+- **Drag & Drop File Upload** - MP3, WAV, FLAC, OGG, and M4A support
+- **Visual Waveform Display** - Real-time waveform visualization with playback controls
+- **Comprehensive Pedalboard Coverage** - 24 native effects including dynamics, filters, modulation, convolution IRs, GSM codec emulation, and more
+- **External VST3 Hosting** - Drop compatible plugins in `backend/plugins` and use them in any chain
+- **Effect Chain Builder** - Add, remove, and reorder effects with ease
+- **Typed Parameter Controls** - Sliders, toggles, selects, and text inputs adjust parameters with live feedback
+- **Preset Management** - Save, list, download, and reuse effect chains through the API
+- **Download Processed Audio** - Export processed audio with a single click
 
 ## Tech Stack
 
 ### Backend
 - **Python 3.11+**
-- **FastAPI** – Modern, fast web framework
-- **Pedalboard 0.9.8** – Spotify's audio effects library
-- **Uvicorn** – ASGI server
+- **FastAPI** - Modern, fast web framework
+- **Pedalboard 0.9.8** - Spotify's audio effects library
+- **Uvicorn** - ASGI server
 
 ### Frontend
 - **React 18** with **TypeScript**
@@ -90,13 +90,13 @@ The frontend will be available at `http://localhost:5173`.
 
 ## Usage
 
-1. **Upload Audio** – Drag and drop an audio file or click to browse
-2. **Add Effects** – Choose effects from the dropdown and click “Add”
-3. **Adjust Parameters** – Use sliders, inputs, or selectors per parameter type
+1. **Upload Audio** - Drag and drop an audio file or click to browse
+2. **Add Effects** - Choose effects from the dropdown and click "Add"
+3. **Adjust Parameters** - Use sliders, inputs, or selectors per parameter type
 4. **Reorder Effects** - Drag any effect header to reposition the chain order
-5. **Process Audio** – Click “Process Audio” to render the effect chain
-6. **Compare & Download** – Audition original vs processed audio and export
-7. **Save Presets (API)** – POST to `/presets` with the current chain to reuse later
+5. **Process Audio** - Click "Process Audio" to render the effect chain
+6. **Compare & Download** - Audition original vs processed audio and export
+7. **Save Presets (API)** - POST to `/presets` with the current chain to reuse later
 
 ### Working with Impulse Responses & VST3 Plugins
 
@@ -128,19 +128,19 @@ The frontend will be available at `http://localhost:5173`.
 | Noise Gate | Suppresses noise | threshold_db, ratio, attack_ms, release_ms |
 | GSM Full Rate | 2G cellular compression | quality |
 | Convolution | IR-based filtering | impulse_response, mix |
-| Invert | Flips polarity | — |
+| Invert | Flips polarity | - |
 | VST3 Plugin | Host external plugin | plugin_path, plugin_name, initialization_timeout, parameter_values |
 
 ## Preset API
 
 Effect presets are stored as JSON in `backend/presets`. Endpoints:
 
-- `GET /presets` – List stored presets
-- `POST /presets` – Create a preset from an effect chain
-- `GET /presets/{preset_id}` – Retrieve full preset payload
-- `GET /presets/{preset_id}/download` – Download preset JSON
-- `DELETE /presets/{preset_id}` – Remove a preset
-- `POST /process` – Accepts either an `effects` array or a `preset_id`
+- `GET /presets` - List stored presets
+- `POST /presets` - Create a preset from an effect chain
+- `GET /presets/{preset_id}` - Retrieve full preset payload
+- `GET /presets/{preset_id}/download` - Download preset JSON
+- `DELETE /presets/{preset_id}` - Remove a preset
+- `POST /process` - Accepts either an `effects` array or a `preset_id`
 
 Example preset creation payload:
 
@@ -157,17 +157,17 @@ Example preset creation payload:
 
 ## API Endpoints
 
-- `GET /` – Health check
-- `GET /effects` – Available effects with metadata and parameter types
-- `GET /presets` – List presets
-- `POST /presets` – Save effect preset
-- `GET /presets/{preset_id}` – Fetch preset details
-- `GET /presets/{preset_id}/download` – Download preset JSON
-- `DELETE /presets/{preset_id}` – Delete preset
-- `POST /upload` – Upload audio file
-- `POST /process` – Process audio with inline `effects` or `preset_id`
-- `GET /download/{file_id}` – Download processed audio
-- `DELETE /cleanup/{file_id}` – Remove uploaded/processed files
+- `GET /` - Health check
+- `GET /effects` - Available effects with metadata and parameter types
+- `GET /presets` - List presets
+- `POST /presets` - Save effect preset
+- `GET /presets/{preset_id}` - Fetch preset details
+- `GET /presets/{preset_id}/download` - Download preset JSON
+- `DELETE /presets/{preset_id}` - Delete preset
+- `POST /upload` - Upload audio file
+- `POST /process` - Process audio with inline `effects` or `preset_id`
+- `GET /download/{file_id}` - Download processed audio
+- `DELETE /cleanup/{file_id}` - Remove uploaded/processed files
 
 ## Deployment
 
@@ -186,8 +186,9 @@ For production deployment instructions, see **[DEPLOYMENT.md](./DEPLOYMENT.md)**
 
 ### Testing / Validation
 
+- Frontend lint: `npm run lint`
 - Frontend production build: `npm run build`
-- Backend modules compile via `python -m compileall backend/*.py`
+- Backend syntax check (from `backend/`): `uv run python -m compileall main.py effects.py presets.py`
 
 ## Future Enhancements
 
@@ -198,6 +199,12 @@ For production deployment instructions, see **[DEPLOYMENT.md](./DEPLOYMENT.md)**
 - [ ] Export to multiple audio formats
 - [ ] Optional user authentication and cloud storage
 
+## Security and Privacy
+
+- No API keys or credentials are stored in this repo; set secrets via deployment platforms or local environment variables.
+- Runtime directories (`backend/uploads`, `backend/processed`, `backend/presets`, `backend/plugins`, `backend/impulses`) are git ignored; clear any personal audio files before publishing.
+- Review deployment configuration (for example Railway variables) before making the repository public.
+
 ## License
 
 MIT License - Copyright (c) 2025 John O'Farrell
@@ -206,6 +213,6 @@ This project uses Spotify's Pedalboard library. Refer to the [Pedalboard license
 
 ## Acknowledgments
 
-- [Spotify Pedalboard](https://github.com/spotify/pedalboard) — core DSP engine
+- [Spotify Pedalboard](https://github.com/spotify/pedalboard) - core DSP engine
 - Thanks to the FastAPI and React communities for great tooling
 

@@ -43,33 +43,3 @@ export interface ProcessResponse {
   message: string;
   download_url: string;
 }
-
-export interface PresetSummary {
-  id: string;
-  name: string;
-  description: string;
-  created_at: string;
-  effects_count: number;
-}
-
-export interface PresetPayload {
-  id: string;
-  name: string;
-  description: string;
-  created_at: string;
-  effects: EffectConfigPayload[];
-  schema_version: number;
-  metadata?: Record<string, any>;
-}
-
-export interface EffectConfigPayload {
-  type: string;
-  params: Record<string, any>;
-}
-
-export interface PresetCreateRequest {
-  name: string;
-  description?: string;
-  effects: EffectConfigPayload[];
-  metadata?: Record<string, any>;
-}

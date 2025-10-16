@@ -35,7 +35,7 @@ WaveSurfer and file uploads require the backend to serve audio files with CORS e
 - `src/App.tsx` - main application shell and orchestration
 - `src/api.ts` - axios client for backend endpoints
 - `src/components/` - UI building blocks (file upload, effect chain, audio player)
-- `src/utils/` - utility helpers for classnames and color handling
+- `src/utils/` - utility helpers for classnames, color handling, and effect defaults
 - `src/theme.ts` - single source of truth for the clay-inspired design system
 
 Static assets live in `public/` and are copied verbatim to the build output.

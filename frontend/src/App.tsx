@@ -7,10 +7,8 @@ import { audioAPI } from './api';
 import type { AvailableEffects, EffectConfig } from './types';
 import { DEFAULT_THEME, type ThemePreset } from './theme';
 import { cn } from './utils/classnames';
+import { createEffectId } from './utils/effects';
 
-
-const createEffectId = (type: string, index: number) =>
-  `${type}-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`;
 
 function App() {
   const [availableEffects, setAvailableEffects] = useState<AvailableEffects>({});

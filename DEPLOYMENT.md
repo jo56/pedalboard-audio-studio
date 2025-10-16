@@ -31,7 +31,7 @@ This is the recommended approach for maximum flexibility.
 
 #### 2. Deploy Backend Service
 
-1. Click "New Service" → "GitHub Repo" → Select your repo
+1. Click "New Service" -> "GitHub Repo" -> Select your repo
 2. Configure the backend service:
    - **Name**: `pedalboard-backend`
    - **Root Directory**: `backend`
@@ -47,7 +47,7 @@ This is the recommended approach for maximum flexibility.
 
 #### 3. Deploy Frontend Service
 
-1. Click "New Service" → "GitHub Repo" → Select the same repo
+1. Click "New Service" -> "GitHub Repo" -> Select the same repo
 2. Configure the frontend service:
    - **Name**: `pedalboard-frontend`
    - **Root Directory**: `frontend`
@@ -121,8 +121,8 @@ Follow the "Deploy Backend Service" steps from the Railway section above.
 ### Frontend on Cloudflare Pages
 
 1. Go to https://dash.cloudflare.com
-2. Navigate to Workers & Pages → Create application → Pages
-3. Connect to Git → Select your repository
+2. Navigate to Workers & Pages -> Create application -> Pages
+3. Connect to Git -> Select your repository
 4. Configure build settings:
    - **Framework preset**: Vite
    - **Build command**: `npm run build`
@@ -152,7 +152,7 @@ Follow the "Deploy Backend Service" steps from the Railway section.
 ### Frontend on Vercel
 
 1. Go to https://vercel.com
-2. Click "Add New" → "Project"
+2. Click "Add New" -> "Project"
 3. Import your GitHub repository
 4. Configure project:
    - **Framework Preset**: Vite
@@ -179,7 +179,7 @@ Render is an alternative to Railway for the backend.
 ### Backend on Render
 
 1. Go to https://render.com
-2. Click "New" → "Web Service"
+2. Click "New" -> "Web Service"
 3. Connect your GitHub repository
 4. Configure:
    - **Name**: `pedalboard-backend`

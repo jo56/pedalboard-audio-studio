@@ -1,9 +1,10 @@
 ﻿import { useState } from 'react';
 import type { DragEvent } from 'react';
-import type { EffectConfig, AvailableEffects, EffectParam } from '../types';
+import type { EffectConfig, AvailableEffects } from '../types';
 import EffectControl from './EffectControl';
 import type { ThemePreset } from '../theme';
 import { cn } from '../utils/classnames';
+import { createEffectId, getDefaultParamValue } from '../utils/effects';
 
 interface EffectChainProps {
   effects: EffectConfig[];
@@ -14,29 +15,6 @@ interface EffectChainProps {
   onImportEffects: () => void;
   theme: ThemePreset;
 }
-
-const defaultValueForParam = (paramDef: EffectParam): any => {
-  if (paramDef.default !== null && paramDef.default !== undefined) {
-    return paramDef.default;
-  }
-
-  switch (paramDef.type) {
-    case 'bool':
-      return false;
-    case 'dict':
-      return {};
-    case 'float':
-    case 'int':
-      return paramDef.min ?? 0;
-    case 'enum':
-    case 'file':
-      return paramDef.options?.[0] ?? '';
-    case 'string':
-      return '';
-    default:
-      return null;
-  }
-};
 
 const isDragHandle = (element: HTMLElement | null): boolean => {
   if (!element) return false;
@@ -71,11 +49,11 @@ export default function EffectChain({
 
     const params: Record<string, any> = {};
     Object.entries(effectDef.params).forEach(([key, paramDef]) => {
-      params[key] = defaultValueForParam(paramDef);
+      params[key] = getDefaultParamValue(paramDef, key);
     });
 
     const newEffect: EffectConfig = {
-      id: `${selectedEffectType}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      id: createEffectId(selectedEffectType),
       type: selectedEffectType,
       params,
     };
