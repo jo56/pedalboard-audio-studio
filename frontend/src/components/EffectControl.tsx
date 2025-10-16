@@ -163,7 +163,12 @@ export default function EffectControl({
           onChange={(e) =>
             handleParamChange(paramName, castSliderValue(e.target.value, paramDef))
           }
-          onPointerDown={(event) => event.stopPropagation()}
+          onMouseDown={(event) => event.stopPropagation()}
+          onTouchStart={(event) => event.stopPropagation()}
+          onDragStart={(event) => event.stopPropagation()}
+          draggable={false}
+          role="slider"
+          data-drag-ignore="true"
           className="w-full h-1 rounded appearance-none cursor-pointer"
           style={{ accentColor: theme.accentColor }}
         />
@@ -175,7 +180,12 @@ export default function EffectControl({
         type="number"
         value={currentValue ?? 0}
         onChange={(e) => handleParamChange(paramName, Number(e.target.value))}
-        onPointerDown={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
+        onTouchStart={(event) => event.stopPropagation()}
+        onDragStart={(event) => event.stopPropagation()}
+        draggable={false}
+        role="spinbutton"
+        data-drag-ignore="true"
         className={inputClass}
       />
     );

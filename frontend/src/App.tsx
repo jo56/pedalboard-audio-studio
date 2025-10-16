@@ -27,7 +27,6 @@ function App() {
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const theme: ThemePreset = defaultTheme;
-  const infoTextClass = 'text-[11px] font-medium text-slate-800 dark:text-slate-200 leading-snug';
 
   useEffect(() => {
     const loadEffects = async () => {
@@ -247,7 +246,7 @@ function App() {
         )}
         {successMessage && (
           <div className={cn('rounded-2xl px-4 py-4 transition-colors duration-300 border', theme.audioPanelClass)}>
-            <p className={infoTextClass}>
+            <p className={cn('text-xs leading-snug', theme.mutedTextClass)}>
               {successMessage}
             </p>
           </div>
@@ -295,7 +294,7 @@ function App() {
                         Reset
                       </button>
                     </div>
-                    <p className={infoTextClass}>
+                    <p className={cn('text-xs leading-snug', theme.mutedTextClass)}>
                       Process renders the current chain against the uploaded audio. Export your chain to
                       reuse settings across sessions or in code.
                     </p>
