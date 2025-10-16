@@ -163,6 +163,7 @@ export default function EffectControl({
           onChange={(e) =>
             handleParamChange(paramName, castSliderValue(e.target.value, paramDef))
           }
+          onPointerDown={(event) => event.stopPropagation()}
           className="w-full h-1 rounded appearance-none cursor-pointer"
           style={{ accentColor: theme.accentColor }}
         />
@@ -174,6 +175,7 @@ export default function EffectControl({
         type="number"
         value={currentValue ?? 0}
         onChange={(e) => handleParamChange(paramName, Number(e.target.value))}
+        onPointerDown={(event) => event.stopPropagation()}
         className={inputClass}
       />
     );
