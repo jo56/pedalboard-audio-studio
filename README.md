@@ -34,24 +34,28 @@ A fullstack web application that provides a beautiful UI for manipulating audio 
 
 ```
 pedalboard-test/
-├─ backend/
-│  ├─ main.py             # FastAPI server
-│  ├─ effects.py          # Effect registry and processing
-│  ├─ presets.py          # Preset persistence helpers
-│  ├─ requirements.txt    # Python dependencies
-│  ├─ uploads/            # Uploaded audio (runtime)
-│  ├─ processed/          # Processed audio (runtime)
-│  ├─ impulses/           # Impulse responses for convolution effects
-│  └─ plugins/            # Optional VST3 binaries
-├─ frontend/
-│  ├─ src/
-│  │  ├─ components/
-│  │  ├─ api.ts
-│  │  ├─ types.ts
-│  │  └─ App.tsx
-│  ├─ package.json
-│  └─ vite.config.ts
-└─ README.md
+|-- backend/
+|   |-- main.py             # FastAPI server
+|   |-- effects.py          # Effect registry and processing
+|   |-- presets.py          # Preset persistence helpers
+|   |-- requirements.txt    # Python dependencies
+|   |-- uploads/            # Uploaded audio (runtime)
+|   |-- processed/          # Processed audio (runtime)
+|   |-- impulses/           # Impulse responses for convolution effects
+|   `-- plugins/            # Optional VST3 binaries
+|-- frontend/
+|   |-- public/
+|   |-- src/
+|   |   |-- components/
+|   |   |-- utils/
+|   |   |-- api.ts
+|   |   |-- theme.ts
+|   |   |-- types.ts
+|   |   `-- App.tsx
+|   |-- package.json
+|   `-- vite.config.ts
+|-- README.md
+`-- DEPLOYMENT.md
 ```
 
 ## Setup Instructions
@@ -90,7 +94,7 @@ The frontend will be available at `http://localhost:5173`.
 1. **Upload Audio** – Drag and drop an audio file or click to browse
 2. **Add Effects** – Choose effects from the dropdown and click “Add”
 3. **Adjust Parameters** – Use sliders, inputs, or selectors per parameter type
-4. **Reorder Effects** – Use the up/down arrows to tweak the chain order
+4. **Reorder Effects** - Drag any effect header to reposition the chain order
 5. **Process Audio** – Click “Process Audio” to render the effect chain
 6. **Compare & Download** – Audition original vs processed audio and export
 7. **Save Presets (API)** – POST to `/presets` with the current chain to reuse later
@@ -205,3 +209,4 @@ This project uses Spotify's Pedalboard library. Refer to the [Pedalboard license
 
 - [Spotify Pedalboard](https://github.com/spotify/pedalboard) — core DSP engine
 - Thanks to the FastAPI and React communities for great tooling
+

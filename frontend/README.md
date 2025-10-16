@@ -1,73 +1,57 @@
-# React + TypeScript + Vite
+# Pedalboard Audio Studio - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript client that pairs with the FastAPI backend to provide an audio-focused workspace. The UI lets you assemble and tweak pedalboard chains, audition results, and export presets.
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js 18 or newer
+- Backend API running locally on `http://localhost:8000` (or configure `VITE_API_URL`)
 
-## React Compiler
+## Available Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `npm run dev` - start Vite with hot module reloading
+- `npm run build` - type-check with `tsc -b` and produce a production build
+- `npm run lint` - lint the project with ESLint
+- `npm run preview` - preview the production build locally
 
-## Expanding the ESLint configuration
+Install dependencies once before running scripts:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Configuration
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The frontend expects a `.env` file or environment variable named `VITE_API_URL` when the backend is not on the default `http://localhost:8000`.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+echo "VITE_API_URL=https://your-backend.example.com" > .env
 ```
+
+WaveSurfer and file uploads require the backend to serve audio files with CORS enabled (already configured in `backend/main.py`).
+
+## Project Layout
+
+- `src/App.tsx` - main application shell and orchestration
+- `src/api.ts` - axios client for backend endpoints
+- `src/components/` - UI building blocks (file upload, effect chain, audio player)
+- `src/utils/` - utility helpers for classnames and color handling
+- `src/theme.ts` - single source of truth for the clay-inspired design system
+
+Static assets live in `public/` and are copied verbatim to the build output.
+
+## Design Notes
+
+- Reordering effects is handled via native drag-and-drop; grab any effect header to move it.
+- Waveform rendering uses [WaveSurfer.js](https://wavesurfer-js.org/). The color palette derives from the accent colors defined in `src/theme.ts`.
+- The theme file exports a `DEFAULT_THEME`. Adjust class strings there if you want to reskin the interface.
+
+## Testing Changes
+
+Run `npm run lint` to surface TypeScript and lint issues during development. For a production confidence check, build the project:
+
+```bash
+npm run build
+```
+
+This mirrors the command used in CI/CD pipelines and ensures type safety plus optimized assets.

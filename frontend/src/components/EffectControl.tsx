@@ -1,5 +1,5 @@
 ﻿import type { EffectConfig, EffectDefinition, EffectParam } from '../types';
-import type { ThemePreset } from '../theme-presets';
+import type { ThemePreset } from '../theme';
 import { cn } from '../utils/classnames';
 
 interface EffectControlProps {

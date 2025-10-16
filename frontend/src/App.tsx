@@ -5,8 +5,7 @@ import AudioPlayer from './components/AudioPlayer';
 import EffectChain from './components/EffectChain';
 import { audioAPI } from './api';
 import type { AvailableEffects, EffectConfig } from './types';
-import { THEME_PRESETS } from './theme-presets';
-import type { ThemePreset } from './theme-presets';
+import { DEFAULT_THEME, type ThemePreset } from './theme';
 import { cn } from './utils/classnames';
 
 
@@ -24,11 +23,8 @@ function App() {
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [errorFading, setErrorFading] = useState(false);
   const [successFading, setSuccessFading] = useState(false);
-  const defaultTheme =
-    THEME_PRESETS.find((preset) => preset.id === 'clay') ?? THEME_PRESETS[0];
   const importInputRef = useRef<HTMLInputElement | null>(null);
-
-  const theme: ThemePreset = defaultTheme;
+  const theme: ThemePreset = DEFAULT_THEME;
 
   useEffect(() => {
     const loadEffects = async () => {

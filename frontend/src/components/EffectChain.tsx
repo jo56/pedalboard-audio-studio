@@ -2,7 +2,7 @@
 import type { DragEvent } from 'react';
 import type { EffectConfig, AvailableEffects, EffectParam } from '../types';
 import EffectControl from './EffectControl';
-import type { ThemePreset } from '../theme-presets';
+import type { ThemePreset } from '../theme';
 import { cn } from '../utils/classnames';
 
 interface EffectChainProps {

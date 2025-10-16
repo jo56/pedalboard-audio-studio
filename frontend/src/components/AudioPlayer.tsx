@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
-import type { ThemePreset } from '../theme-presets';
+import type { ThemePreset } from '../theme';
 import { cn } from '../utils/classnames';
 import { getMutedWaveColor } from '../utils/colors';
 
