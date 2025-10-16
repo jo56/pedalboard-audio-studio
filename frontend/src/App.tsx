@@ -21,10 +21,12 @@ function App() {
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [uploadAnimationIndex, setUploadAnimationIndex] = useState(0);
+  const [processingAnimationIndex, setProcessingAnimationIndex] = useState(0);
   const [errorFading, setErrorFading] = useState(false);
   const [successFading, setSuccessFading] = useState(false);
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const uploadAnimationRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const processingAnimationRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const theme: ThemePreset = DEFAULT_THEME;
 
   useEffect(() => {
@@ -98,6 +100,31 @@ function App() {
       uploadAnimationRef.current = null;
     };
   }, [isUploadingFile]);
+
+  useEffect(() => {
+    if (!isProcessing) {
+      if (processingAnimationRef.current) {
+        clearInterval(processingAnimationRef.current);
+        processingAnimationRef.current = null;
+      }
+      setProcessingAnimationIndex(0);
+      return;
+    }
+
+    if (processingAnimationRef.current) {
+      clearInterval(processingAnimationRef.current);
+    }
+
+    const intervalId = window.setInterval(() => {
+      setProcessingAnimationIndex((prev) => (prev + 1) % 3);
+    }, 500);
+    processingAnimationRef.current = intervalId;
+
+    return () => {
+      clearInterval(intervalId);
+      processingAnimationRef.current = null;
+    };
+  }, [isProcessing]);
 
   const invalidateProcessedAudio = () => {
     if (processedAudioUrl) {
@@ -328,6 +355,7 @@ function App() {
   const ghostButtonClass = cn(baseButtonClass, theme.buttonGhostClass);
   const headerUsesLightText = theme.headerTitleClass.includes('text-white');
   const uploadingMessage = isUploadingFile ? `Uploading file${'.'.repeat((uploadAnimationIndex % 3) + 1)}` : '';
+  const processingMessage = isProcessing ? `Processing audio${'.'.repeat((processingAnimationIndex % 3) + 1)}` : '';
 
   return (
     <div className={cn('min-h-screen transition-colors duration-500', theme.bodyClass)}>
@@ -374,6 +402,24 @@ function App() {
           >
             <div className="flex items-center justify-between gap-3">
               <p className={cn('text-xs leading-snug flex-1', theme.mutedTextClass)}>{uploadingMessage}</p>
+              <span
+                className="flex-shrink-0 text-slate-500 dark:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                aria-hidden="true"
+              >
+                ...
+              </span>
+            </div>
+          </div>
+        )}
+        {isProcessing && (
+          <div
+            className={cn(
+              'group rounded-2xl px-4 py-4 transition-all duration-500 border',
+              theme.audioPanelClass,
+            )}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className={cn('text-xs leading-snug flex-1', theme.mutedTextClass)}>{processingMessage}</p>
               <span
                 className="flex-shrink-0 text-slate-500 dark:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                 aria-hidden="true"
