@@ -88,13 +88,21 @@ function App() {
   const handleFileSelected = async (file: File) => {
     setError('');
     setSuccessMessage('');
-    setUploadedFile(file);
+    setUploadedFile(null);
     setProcessedAudioUrl('');
+    setFileId('');
 
     try {
       const response = await audioAPI.uploadFile(file);
       setFileId(response.file_id);
       setSuccessMessage('File uploaded successfully');
+
+      const restoreUploadedFile = () => setUploadedFile(file);
+      if (typeof window !== 'undefined' && 'requestAnimationFrame' in window) {
+        window.requestAnimationFrame(restoreUploadedFile);
+      } else {
+        restoreUploadedFile();
+      }
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to upload file';
       setError(`Upload failed: ${errorMessage}`);
