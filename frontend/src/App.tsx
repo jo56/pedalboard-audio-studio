@@ -24,11 +24,9 @@ function App() {
   const [successMessage, setSuccessMessage] = useState<string>('');
   const defaultTheme =
     THEME_PRESETS.find((preset) => preset.id === 'clay') ?? THEME_PRESETS[0];
-  const [selectedThemeId, setSelectedThemeId] = useState<string>(defaultTheme.id);
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
-  const theme: ThemePreset =
-    THEME_PRESETS.find((preset) => preset.id === selectedThemeId) ?? defaultTheme;
+  const theme: ThemePreset = defaultTheme;
 
   useEffect(() => {
     const loadEffects = async () => {
@@ -248,7 +246,7 @@ function App() {
         )}
         {successMessage && (
           <div className={cn('rounded-3xl p-5 transition-colors duration-300 border', theme.audioPanelClass)}>
-            <p className='text-sm font-medium text-slate-800 dark:text-slate-100'>{successMessage}</p>
+            <p className='text-sm font-medium text-slate-900 dark:text-slate-100'>{successMessage}</p>
           </div>
         )}
 
@@ -294,7 +292,7 @@ function App() {
                         Reset
                       </button>
                     </div>
-                    <p className={cn('text-xs text-slate-700 dark:text-slate-200', theme.mutedTextClass)}>
+                    <p className={cn('text-xs text-slate-900 dark:text-slate-100', theme.mutedTextClass)}>
                       Process renders the current chain against the uploaded audio. Export your chain to
                       reuse settings across sessions or in code.
                     </p>
