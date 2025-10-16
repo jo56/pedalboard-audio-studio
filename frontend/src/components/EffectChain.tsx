@@ -157,14 +157,12 @@ export default function EffectChain({
     'w-full px-3 py-2 text-sm rounded transition-colors focus:outline-none',
     theme.selectClass,
   );
+  const compactActionButtonClass =
+    'w-full min-h-[2.75rem] px-5 text-xs sm:text-sm tracking-[0.08em] flex items-center justify-center whitespace-nowrap';
 
   return (
-    <div className={panelClass}>
-      <h3 className={cn('text-sm font-semibold mb-4 uppercase tracking-wide', theme.headingTextClass)}>
-        Effects
-      </h3>
-
-      <div className="mb-4 space-y-2">
+    <div className={cn(panelClass, 'space-y-3 pb-6')}>
+      <div className="space-y-1.5">
         <select
           value={selectedEffectType}
           onChange={(e) => setSelectedEffectType(e.target.value)}
@@ -179,25 +177,25 @@ export default function EffectChain({
               </option>
             ))}
         </select>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           <button
             onClick={addEffect}
             disabled={!selectedEffectType}
-            className={cn(primaryButtonClass, 'w-full')}
+            className={cn(primaryButtonClass, compactActionButtonClass)}
             type="button"
           >
-            Add Effect
+            Add
           </button>
           <button
             onClick={onClearEffects}
             disabled={effects.length === 0}
-            className={cn(secondaryButtonClass, 'w-full')}
+            className={cn(secondaryButtonClass, compactActionButtonClass)}
             type="button"
           >
-            Clear All Effects
+            <span className="pl-1">Clear</span>
           </button>
           <button onClick={onImportEffects} className={cn(ghostButtonClass, 'w-full')} type="button">
-            Import Settings
+            Import
           </button>
           <button
             onClick={onExportEffects}
@@ -205,16 +203,12 @@ export default function EffectChain({
             className={cn(ghostButtonClass, 'w-full')}
             type="button"
           >
-            Export Settings
+            Export
           </button>
         </div>
       </div>
 
-      {effects.length === 0 ? (
-        <div className="text-center py-8 text-sm uppercase tracking-wide opacity-70">
-          No effects added
-        </div>
-      ) : (
+      {effects.length > 0 && (
         <div className="space-y-3">
           {effects.map((effect, index) => {
             const definition = availableEffects[effect.type];
