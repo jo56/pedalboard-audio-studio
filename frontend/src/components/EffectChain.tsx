@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import type { DragEvent } from 'react';
 import type { EffectConfig, AvailableEffects, EffectParam } from '../types';
 import EffectControl from './EffectControl';
@@ -157,14 +157,13 @@ export default function EffectChain({
     'w-full px-3 py-2 text-sm rounded transition-colors focus:outline-none',
     theme.selectClass,
   );
+  const compactActionButtonClass =
+    'w-full min-h-[2.65rem] px-4 text-xs sm:text-sm flex items-center justify-center whitespace-nowrap';
+  const hasEffects = effects.length > 0;
 
   return (
-    <div className={panelClass}>
-      <h3 className={cn('text-sm font-semibold mb-4 uppercase tracking-wide', theme.headingTextClass)}>
-        Effects
-      </h3>
-
-      <div className="mb-4 space-y-2">
+    <div className={cn(panelClass, 'space-y-3 pb-6')}>
+      <div className="space-y-1.5">
         <select
           value={selectedEffectType}
           onChange={(e) => setSelectedEffectType(e.target.value)}
@@ -179,81 +178,88 @@ export default function EffectChain({
               </option>
             ))}
         </select>
-        <div className="flex gap-2">
-          <button onClick={addEffect} disabled={!selectedEffectType} className={primaryButtonClass}>
-            Add Effect
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          <button
+            onClick={addEffect}
+            disabled={!selectedEffectType}
+            className={cn(primaryButtonClass, compactActionButtonClass)}
+            type="button"
+          >
+            Add
           </button>
           <button
             onClick={onClearEffects}
             disabled={effects.length === 0}
-            className={secondaryButtonClass}
+            className={cn(secondaryButtonClass, compactActionButtonClass)}
+            type="button"
           >
-            Clear All Effects
+            <span className="pl-1">Clear</span>
           </button>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={onImportEffects} className={ghostButtonClass} type="button">
-            Import Settings
+          <button
+            onClick={onImportEffects}
+            className={cn(ghostButtonClass, 'w-full min-h-[2.65rem] flex items-center justify-center text-xs sm:text-sm')}
+            type="button"
+          >
+            Import
           </button>
           <button
             onClick={onExportEffects}
             disabled={effects.length === 0}
-            className={ghostButtonClass}
+            className={cn(
+              ghostButtonClass,
+              'w-full min-h-[2.65rem] flex items-center justify-center text-xs sm:text-sm',
+            )}
             type="button"
           >
-            Export Settings
+            Export
           </button>
         </div>
       </div>
 
-      {effects.length === 0 ? (
-        <div className="text-center py-8 text-sm uppercase tracking-wide opacity-70">
-          No effects added
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {effects.map((effect, index) => {
-            const definition = availableEffects[effect.type];
-            if (!definition) return null;
+      {hasEffects && (
+        <>
+          <div className="space-y-3">
+            {effects.map((effect, index) => {
+              const definition = availableEffects[effect.type];
+              if (!definition) return null;
 
-            const isDragging = draggingId === effect.id;
-            const isTarget = activeHoverId === effect.id && !isDragging;
+              const isDragging = draggingId === effect.id;
+              const isTarget = activeHoverId === effect.id && !isDragging;
 
-            const cardClass = cn(
-              'rounded-2xl border transition-shadow duration-200',
-              theme.effectCardClass,
-              isDragging && theme.effectCardActiveClass,
-              isTarget && theme.effectCardTargetClass,
-            );
+              const cardClass = cn(
+                'rounded-2xl border transition-shadow duration-200',
+                theme.effectCardClass,
+                isDragging && theme.effectCardActiveClass,
+                isTarget && theme.effectCardTargetClass,
+              );
 
-            return (
-              <div
-                key={effect.id}
-                draggable
-                onDragStart={handleDragStart(effect.id)}
-                onDragOver={handleDragOverCard(effect.id, index)}
-                onDragEnter={handleDragOverCard(effect.id, index)}
-                onDrop={handleDrop}
-                onDragEnd={handleDragEnd}
-              >
-                <EffectControl
-                  effect={effect}
-                  definition={definition}
-                  onUpdate={(updated) => updateEffect(index, updated)}
-                  onRemove={() => removeEffect(index)}
-                  className={cardClass}
-                  theme={theme}
-                />
-              </div>
-            );
-          })}
-        </div>
-      )}
+              return (
+                <div
+                  key={effect.id}
+                  draggable
+                  onDragStart={handleDragStart(effect.id)}
+                  onDragOver={handleDragOverCard(effect.id, index)}
+                  onDragEnter={handleDragOverCard(effect.id, index)}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                >
+                  <EffectControl
+                    effect={effect}
+                    definition={definition}
+                    onUpdate={(updated) => updateEffect(index, updated)}
+                    onRemove={() => removeEffect(index)}
+                    className={cardClass}
+                    theme={theme}
+                  />
+                </div>
+              );
+            })}
+          </div>
 
-      {effects.length > 0 && (
-        <p className={cn('mt-3 text-[11px]', theme.mutedTextClass)}>
-          Drag any effect card to change its position. The chain updates as you move.
-        </p>
+          <p className={cn('mt-3 text-[11px] text-slate-700 dark:text-slate-200', theme.mutedTextClass)}>
+            Drag any effect card to change its position. The chain updates as you move.
+          </p>
+        </>
       )}
     </div>
   );

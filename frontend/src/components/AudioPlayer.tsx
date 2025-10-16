@@ -1,7 +1,8 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import type { ThemePreset } from '../theme-presets';
 import { cn } from '../utils/classnames';
+import { getMutedWaveColor, getWaveProgressColor } from '../utils/colors';
 
 interface AudioPlayerProps {
   audioFile: File | string;
@@ -16,14 +17,17 @@ export default function AudioPlayer({ audioFile, title, theme }: AudioPlayerProp
   const [duration, setDuration] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
 
+  const waveColor = useMemo(() => getMutedWaveColor(theme.waveColor), [theme.waveColor]);
+  const waveProgressColor = useMemo(() => getWaveProgressColor(theme.waveProgressColor), [theme.waveProgressColor]);
+
   useEffect(() => {
     if (!waveformRef.current) return;
 
     const wavesurfer = WaveSurfer.create({
       container: waveformRef.current,
-      waveColor: theme.waveColor,
-      progressColor: theme.waveProgressColor,
-      cursorColor: theme.waveProgressColor,
+      waveColor,
+      progressColor: waveProgressColor,
+      cursorColor: waveProgressColor,
       barWidth: 2,
       barRadius: 2,
       cursorWidth: 1,
@@ -59,7 +63,7 @@ export default function AudioPlayer({ audioFile, title, theme }: AudioPlayerProp
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [audioFile, theme]);
+  }, [audioFile, waveColor, waveProgressColor]);
 
   const togglePlayPause = () => {
     if (wavesurferRef.current) {
@@ -86,10 +90,13 @@ export default function AudioPlayer({ audioFile, title, theme }: AudioPlayerProp
 
       <div ref={waveformRef} className="mb-3" />
 
-      <button onClick={togglePlayPause} className={cn(
-        'px-4 py-2 text-sm font-semibold rounded transition-colors duration-200',
-        theme.audioPlayButtonClass,
-      )}>
+      <button
+        onClick={togglePlayPause}
+        className={cn(
+          'px-4 py-2 text-sm font-semibold rounded transition-colors duration-200',
+          theme.audioPlayButtonClass,
+        )}
+      >
         {isPlaying ? 'Pause' : 'Play'}
       </button>
     </div>

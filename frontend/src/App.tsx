@@ -9,6 +9,7 @@ import { THEME_PRESETS } from './theme-presets';
 import type { ThemePreset } from './theme-presets';
 import { cn } from './utils/classnames';
 
+
 const createEffectId = (type: string, index: number) =>
   `${type}-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`;
 
@@ -21,10 +22,13 @@ function App() {
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
-  const [selectedThemeId, setSelectedThemeId] = useState<string>(THEME_PRESETS[0].id);
+  const defaultTheme =
+    THEME_PRESETS.find((preset) => preset.id === 'clay') ?? THEME_PRESETS[0];
+  const [selectedThemeId, setSelectedThemeId] = useState<string>(defaultTheme.id);
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
-  const theme: ThemePreset = THEME_PRESETS.find((preset) => preset.id === selectedThemeId) ?? THEME_PRESETS[0];
+  const theme: ThemePreset =
+    THEME_PRESETS.find((preset) => preset.id === selectedThemeId) ?? defaultTheme;
 
   useEffect(() => {
     const loadEffects = async () => {
@@ -220,34 +224,19 @@ function App() {
   const primaryButtonClass = cn(baseButtonClass, theme.buttonPrimaryClass);
   const secondaryButtonClass = cn(baseButtonClass, theme.buttonSecondaryClass);
   const ghostButtonClass = cn(baseButtonClass, theme.buttonGhostClass);
+  const headerUsesLightText = theme.headerTitleClass.includes('text-white');
 
   return (
     <div className={cn('min-h-screen transition-colors duration-500', theme.bodyClass)}>
-      <header className={cn('transition-colors duration-500 border-b', theme.headerClass)}>
-        <div className="max-w-6xl mx-auto px-6 py-6 space-y-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <h1 className={cn('text-2xl font-semibold', theme.headerTitleClass)}>Pedalboard Audio Studio</h1>
-            <div className="flex items-center gap-3">
-              <label className={cn('text-xs uppercase tracking-wide', theme.mutedTextClass)}>
-                Theme
-              </label>
-              <select
-                value={selectedThemeId}
-                onChange={(event) => setSelectedThemeId(event.target.value)}
-                className={cn(
-                  'px-3 py-2 text-sm rounded transition-colors focus:outline-none',
-                  theme.selectClass,
-                )}
-              >
-                {THEME_PRESETS.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <p className={cn('text-xs max-w-3xl', theme.mutedTextClass)}>{theme.description}</p>
+      <header
+        className={cn(
+          'transition-colors duration-500 border-b',
+          theme.headerClass,
+          headerUsesLightText && 'text-white/90',
+        )}
+      >
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          <h1 className={cn('text-2xl font-semibold', theme.headerTitleClass)}>Pedalboard Audio Studio</h1>
         </div>
       </header>
 
@@ -258,8 +247,8 @@ function App() {
           </div>
         )}
         {successMessage && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-400/40 text-emerald-200 rounded-lg text-sm">
-            {successMessage}
+          <div className={cn('rounded-3xl p-5 transition-colors duration-300 border', theme.audioPanelClass)}>
+            <p className='text-sm font-medium text-slate-800 dark:text-slate-100'>{successMessage}</p>
           </div>
         )}
 
@@ -305,7 +294,7 @@ function App() {
                         Reset
                       </button>
                     </div>
-                    <p className={cn('text-xs', theme.mutedTextClass)}>
+                    <p className={cn('text-xs text-slate-700 dark:text-slate-200', theme.mutedTextClass)}>
                       Process renders the current chain against the uploaded audio. Export your chain to
                       reuse settings across sessions or in code.
                     </p>
@@ -329,3 +318,6 @@ function App() {
 }
 
 export default App;
+
+
+
