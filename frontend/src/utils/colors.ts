@@ -59,10 +59,6 @@ const toRgbaString = ({ r, g, b }: RgbColor, alpha: number): string => {
   return `rgba(${Math.round(clampChannel(r))}, ${Math.round(clampChannel(g))}, ${Math.round(clampChannel(b))}, ${alpha})`;
 };
 
-const toRgbString = ({ r, g, b }: RgbColor): string => {
-  return `rgb(${Math.round(clampChannel(r))}, ${Math.round(clampChannel(g))}, ${Math.round(clampChannel(b))})`;
-};
-
 const mixRgb = (base: RgbColor, target: RgbColor, amount: number): RgbColor => {
   const weight = Math.min(1, Math.max(0, amount));
   const inverse = 1 - weight;
@@ -82,12 +78,6 @@ const relativeLuminance = ({ r, g, b }: RgbColor): number => {
   const [rLin, gLin, bLin] = [transform(r), transform(g), transform(b)];
 
   return 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
-};
-
-export const withAlpha = (color: string, alpha: number): string => {
-  const rgb = parseColor(color);
-  if (!rgb) return color.trim();
-  return toRgbaString(rgb, alpha);
 };
 
 export const getMutedWaveColor = (color: string): string => {
@@ -112,29 +102,3 @@ export const getMutedWaveColor = (color: string): string => {
   const amount = luminance > 0.45 ? 0.42 : 0.48;
   return toRgbaString(mixRgb(rgb, anchor, amount), 0.44);
 };
-
-export const getWaveProgressColor = (color: string): string => {
-  const rgb = parseColor(color);
-  if (!rgb) return 'rgba(20, 32, 56, 0.96)';
-
-  const darkAnchor: RgbColor = { r: 124, g: 45, b: 18 };
-  const lightAnchor: RgbColor = { r: 232, g: 121, b: 33 };
-  const luminance = relativeLuminance(rgb);
-
-  if (luminance >= 0.6) {
-    const emphasis = mixRgb(rgb, darkAnchor, 0.8);
-    return toRgbaString(emphasis, 0.88);
-  }
-
-  if (luminance <= 0.25) {
-    const emphasis = mixRgb(rgb, lightAnchor, 0.45);
-    return toRgbaString(emphasis, 0.85);
-  }
-
-  const anchor = luminance > 0.45 ? darkAnchor : lightAnchor;
-  const amount = luminance > 0.45 ? 0.7 : 0.55;
-  const target = mixRgb(rgb, anchor, amount);
-  const alpha = luminance > 0.45 ? 0.88 : 0.85;
-  return toRgbaString(target, alpha);
-};
-

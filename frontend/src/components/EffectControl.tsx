@@ -1,6 +1,7 @@
 ﻿import type { EffectConfig, EffectDefinition, EffectParam } from '../types';
-import type { ThemePreset } from '../theme-presets';
+import type { ThemePreset } from '../theme';
 import { cn } from '../utils/classnames';
+import { getDefaultParamValue } from '../utils/effects';
 
 interface EffectControlProps {
   effect: EffectConfig;
@@ -25,30 +26,6 @@ const formatValue = (value: unknown) => {
     return 'custom';
   }
   return String(value);
-};
-
-const resolveDefaultValue = (paramKey: string, paramDef: EffectParam): any => {
-  if (paramDef.default !== null && paramDef.default !== undefined) {
-    return paramDef.default;
-  }
-
-  switch (paramDef.type) {
-    case 'bool':
-      return false;
-    case 'dict':
-      return {};
-    case 'float':
-    case 'int':
-      return paramDef.min ?? 0;
-    case 'enum':
-    case 'file':
-      return paramDef.options?.[0] ?? '';
-    case 'string':
-      return '';
-    default:
-      console.warn(`No default value for parameter '${paramKey}'`);
-      return null;
-  }
 };
 
 const castSliderValue = (value: string, paramDef: EffectParam) => {
@@ -89,7 +66,7 @@ export default function EffectControl({
 
   const renderControl = (paramName: string, paramDef: EffectParam) => {
     const currentValue =
-      effect.params[paramName] ?? resolveDefaultValue(paramName, paramDef);
+      effect.params[paramName] ?? getDefaultParamValue(paramDef, paramName);
 
     if (paramDef.type === 'enum' || paramDef.type === 'file') {
       const options = paramDef.options ?? [];
@@ -215,7 +192,7 @@ export default function EffectControl({
       <div className="space-y-2">
         {Object.entries(definition.params).map(([paramName, paramDef]) => {
           const currentValue =
-            effect.params[paramName] ?? resolveDefaultValue(paramName, paramDef);
+            effect.params[paramName] ?? getDefaultParamValue(paramDef, paramName);
 
           return (
             <div key={paramName}>

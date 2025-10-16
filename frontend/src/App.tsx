@@ -1,17 +1,14 @@
 ﻿import { useState, useEffect, useRef } from 'react';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, MouseEvent } from 'react';
 import FileUpload from './components/FileUpload';
 import AudioPlayer from './components/AudioPlayer';
 import EffectChain from './components/EffectChain';
 import { audioAPI } from './api';
 import type { AvailableEffects, EffectConfig } from './types';
-import { THEME_PRESETS } from './theme-presets';
-import type { ThemePreset } from './theme-presets';
+import { DEFAULT_THEME, type ThemePreset } from './theme';
 import { cn } from './utils/classnames';
+import { createEffectId } from './utils/effects';
 
-
-const createEffectId = (type: string, index: number) =>
-  `${type}-${Date.now()}-${index}-${Math.random().toString(16).slice(2)}`;
 
 function App() {
   const [availableEffects, setAvailableEffects] = useState<AvailableEffects>({});
@@ -24,11 +21,8 @@ function App() {
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [errorFading, setErrorFading] = useState(false);
   const [successFading, setSuccessFading] = useState(false);
-  const defaultTheme =
-    THEME_PRESETS.find((preset) => preset.id === 'clay') ?? THEME_PRESETS[0];
   const importInputRef = useRef<HTMLInputElement | null>(null);
-
-  const theme: ThemePreset = defaultTheme;
+  const theme: ThemePreset = DEFAULT_THEME;
 
   useEffect(() => {
     const loadEffects = async () => {
@@ -239,10 +233,45 @@ function App() {
     }
   };
 
-  const handleDownload = () => {
-    if (processedAudioUrl) {
-      window.open(processedAudioUrl, '_blank');
+  const handleDownload = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+
+    if (!processedAudioUrl) {
+      return;
     }
+
+    void (async () => {
+      try {
+        const response = await fetch(processedAudioUrl);
+
+        if (!response.ok) {
+          throw new Error(`Download failed with status ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+
+        if (uploadedFile) {
+          const extensionIndex = uploadedFile.name.lastIndexOf('.');
+          const hasExtension = extensionIndex > -1;
+          const baseName = hasExtension ? uploadedFile.name.slice(0, extensionIndex) : uploadedFile.name;
+          const extension = hasExtension ? uploadedFile.name.slice(extensionIndex) : '.wav';
+          anchor.download = `${baseName}-processed${extension}`;
+        } else {
+          anchor.download = 'processed-audio.wav';
+        }
+
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Download failed:', err);
+        setError('Failed to download processed audio. Please try again.');
+      }
+    })();
   };
 
   const handleReset = () => {
@@ -276,15 +305,18 @@ function App() {
 
       <main className={cn('max-w-6xl mx-auto px-6 py-6 space-y-6')}>
         {error && (
-          <div className={cn(
-            'group p-3 bg-red-500/10 border border-red-400/40 text-red-200 rounded-lg text-sm transition-opacity duration-500',
-            errorFading && 'opacity-0'
-          )}>
+          <div
+            className={cn(
+              'group rounded-2xl px-4 py-4 transition-all duration-500 border shadow-lg border-[#b45309]',
+              theme.audioPanelClass,
+              errorFading && 'opacity-0',
+            )}
+          >
             <div className="flex items-center justify-between gap-3">
-              <p className="leading-snug flex-1">{error}</p>
+              <p className="text-xs leading-snug flex-1 font-medium text-[#7c2d12]">{error}</p>
               <button
                 type="button"
-                className="flex-shrink-0 text-red-200/80 hover:text-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                className="flex-shrink-0 text-[#b45309] hover:text-[#7c2d12] opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                 aria-label="Dismiss error message"
                 onClick={() => setError('')}
               >

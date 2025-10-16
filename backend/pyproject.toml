@@ -1,0 +1,17 @@
+[project]
+name = "pedalboard-backend"
+version = "0.1.0"
+description = "FastAPI backend for Pedalboard Audio Studio"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.104.1",
+    "uvicorn[standard]==0.24.0",
+    "python-multipart==0.0.6",
+    "pedalboard==0.9.8",
+    "numpy==1.24.3",
+    "aiofiles==23.2.1",
+]
+
+[tool.uv]
+# Skip building a wheel; treat this as an application project.
+package = false

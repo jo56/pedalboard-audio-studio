@@ -31,23 +31,23 @@ This is the recommended approach for maximum flexibility.
 
 #### 2. Deploy Backend Service
 
-1. Click "New Service" → "GitHub Repo" → Select your repo
+1. Click "New Service" -> "GitHub Repo" -> Select your repo
 2. Configure the backend service:
    - **Name**: `pedalboard-backend`
    - **Root Directory**: `backend`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Build Command**: `pip install uv && uv sync`
+   - **Start Command**: `uv run uvicorn main:app --host 0.0.0.0 --port $PORT`
    - **Healthcheck Path**: `/`
 
 3. Add environment variables (optional):
-   - `PYTHON_VERSION`: `3.10`
+   - `PYTHON_VERSION`: `3.11`
    - `PORT`: `8000` (Railway auto-assigns this)
 
 4. Railway will auto-detect the Python app and deploy it.
 
 #### 3. Deploy Frontend Service
 
-1. Click "New Service" → "GitHub Repo" → Select the same repo
+1. Click "New Service" -> "GitHub Repo" -> Select the same repo
 2. Configure the frontend service:
    - **Name**: `pedalboard-frontend`
    - **Root Directory**: `frontend`
@@ -71,22 +71,13 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 #### 5. Enable CORS on Backend
 
-Update `backend/main.py` to allow your frontend domain:
+Add a `CORS_ALLOWED_ORIGINS` environment variable in Railway (Project Settings → Variables) with your Cloudflare Pages domain, for example:
 
-```python
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://<your-frontend-service>.railway.app"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 ```
+https://your-project.pages.dev
+```
+
+Multiple origins can be provided by separating them with commas. Local development addresses are already whitelisted.
 
 ### Option 2: Single Service Deployment
 
@@ -107,8 +98,8 @@ Alternatively, you can serve the frontend as static files from the backend:
 
 3. Deploy only the backend with:
    - **Root Directory**: `/`
-   - **Build Command**: `cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt`
-   - **Start Command**: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Build Command**: `cd frontend && npm install && npm run build && cd ../backend && pip install uv && uv sync`
+   - **Start Command**: `cd backend && uv run uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 ## Cloudflare Pages + Railway
 
@@ -121,8 +112,8 @@ Follow the "Deploy Backend Service" steps from the Railway section above.
 ### Frontend on Cloudflare Pages
 
 1. Go to https://dash.cloudflare.com
-2. Navigate to Workers & Pages → Create application → Pages
-3. Connect to Git → Select your repository
+2. Navigate to Workers & Pages -> Create application -> Pages
+3. Connect to Git -> Select your repository
 4. Configure build settings:
    - **Framework preset**: Vite
    - **Build command**: `npm run build`
@@ -134,12 +125,7 @@ Follow the "Deploy Backend Service" steps from the Railway section above.
 
 6. Click "Save and Deploy"
 
-7. Update CORS settings in `backend/main.py` to include your Cloudflare Pages URL:
-   ```python
-   allow_origins=[
-       "https://<your-project>.pages.dev"
-   ]
-   ```
+7. In Railway, add `CORS_ALLOWED_ORIGINS=https://<your-project>.pages.dev` so the API accepts requests from your Pages deployment (use commas to list multiple domains).
 
 ## Vercel + Railway
 
@@ -152,7 +138,7 @@ Follow the "Deploy Backend Service" steps from the Railway section.
 ### Frontend on Vercel
 
 1. Go to https://vercel.com
-2. Click "Add New" → "Project"
+2. Click "Add New" -> "Project"
 3. Import your GitHub repository
 4. Configure project:
    - **Framework Preset**: Vite
@@ -165,12 +151,7 @@ Follow the "Deploy Backend Service" steps from the Railway section.
 
 6. Click "Deploy"
 
-7. Update CORS in `backend/main.py` to include your Vercel domain:
-   ```python
-   allow_origins=[
-       "https://<your-project>.vercel.app"
-   ]
-   ```
+7. Add `CORS_ALLOWED_ORIGINS=https://<your-project>.vercel.app` in Railway so the backend accepts calls from the Vercel deployment.
 
 ## Render (Alternative)
 
@@ -179,14 +160,14 @@ Render is an alternative to Railway for the backend.
 ### Backend on Render
 
 1. Go to https://render.com
-2. Click "New" → "Web Service"
+2. Click "New" -> "Web Service"
 3. Connect your GitHub repository
 4. Configure:
    - **Name**: `pedalboard-backend`
    - **Root Directory**: `backend`
    - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Build Command**: `pip install uv && uv sync`
+   - **Start Command**: `uv run uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 5. Click "Create Web Service"
 
@@ -206,29 +187,19 @@ All deployment options above use **ephemeral storage**, meaning uploaded files w
 
 **Backend:**
 - `PORT`: Auto-assigned by platform
-- `PYTHON_VERSION`: `3.10` (optional, usually auto-detected)
+- `PYTHON_VERSION`: `3.11` (optional, usually auto-detected)
+- `CORS_ALLOWED_ORIGINS`: Comma-separated list of production frontend origins (for example `https://your-project.pages.dev`)
 
 **Frontend:**
 - `VITE_API_URL`: Your backend API URL
 
+### Environment Files
+
+Copy the provided `.env.example` files in `backend/` and `frontend/` as a starting point for local development or to document the variables you set in each hosting provider’s dashboard.
+
 ### CORS Configuration
 
-Always update your backend's CORS settings to include your frontend domain:
-
-```python
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",           # Local development
-        "https://your-frontend.com"        # Production
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
+Always set the backend `CORS_ALLOWED_ORIGINS` environment variable with every production frontend domain (comma separated). The defaults already cover local development addresses.
 
 ## Testing Your Deployment
 
@@ -244,8 +215,8 @@ After deployment:
 
 ### Backend issues:
 - Check Railway/Render logs for Python errors
-- Verify `requirements.txt` is in the root of `backend/`
-- Ensure `uvicorn` is listed in requirements
+- Verify `pyproject.toml` is in the root of `backend/`
+- Ensure `uvicorn` is listed in the `project.dependencies` section
 
 ### Frontend issues:
 - Verify `VITE_API_URL` is set correctly
@@ -253,8 +224,7 @@ After deployment:
 - Ensure API endpoints are accessible
 
 ### CORS errors:
-- Add your frontend domain to backend's CORS allowed origins
-- Redeploy backend after CORS changes
+- Confirm `CORS_ALLOWED_ORIGINS` on the backend includes the frontend domain and redeploy after updating the variable.
 
 ## Cost Estimates
 
