@@ -14,6 +14,7 @@ function App() {
   const [availableEffects, setAvailableEffects] = useState<AvailableEffects>({});
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [isWaitingForVisibleAudio, setIsWaitingForVisibleAudio] = useState(false);
   const [fileId, setFileId] = useState<string>('');
   const [effects, setEffects] = useState<EffectConfig[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -82,7 +83,7 @@ function App() {
   }, [successMessage]);
 
   useEffect(() => {
-    const isLoadingUpload = isUploadingFile || pendingFile !== null;
+    const isLoadingUpload = isUploadingFile || pendingFile !== null || isWaitingForVisibleAudio;
 
     if (!isLoadingUpload) {
       if (uploadAnimationRef.current) {
@@ -106,7 +107,7 @@ function App() {
       clearInterval(intervalId);
       uploadAnimationRef.current = null;
     };
-  }, [isUploadingFile, pendingFile]);
+  }, [isUploadingFile, pendingFile, isWaitingForVisibleAudio]);
 
   useEffect(() => {
     const isLoadingAudio = isProcessing || (processedAudioUrl && !isProcessedAudioReady);
@@ -179,7 +180,12 @@ function App() {
     if (pendingFile) {
       setUploadedFile(pendingFile);
       setPendingFile(null);
+      setIsWaitingForVisibleAudio(true);
     }
+  };
+
+  const handleVisibleUploadedAudioReady = () => {
+    setIsWaitingForVisibleAudio(false);
     if (pendingUploadSuccessMessage) {
       setSuccessMessage(pendingUploadSuccessMessage);
       setPendingUploadSuccessMessage('');
@@ -371,6 +377,7 @@ function App() {
   const handleReset = () => {
     setUploadedFile(null);
     setPendingFile(null);
+    setIsWaitingForVisibleAudio(false);
     setPendingUploadSuccessMessage('');
     setFileId('');
     setProcessedAudioUrl('');
@@ -386,7 +393,7 @@ function App() {
   const secondaryButtonClass = cn(baseButtonClass, theme.buttonSecondaryClass);
   const ghostButtonClass = cn(baseButtonClass, theme.buttonGhostClass);
   const headerUsesLightText = theme.headerTitleClass.includes('text-white');
-  const isLoadingUploadedAudio = isUploadingFile || pendingFile !== null;
+  const isLoadingUploadedAudio = isUploadingFile || pendingFile !== null || isWaitingForVisibleAudio;
   const uploadingMessage = isLoadingUploadedAudio ? `Uploading file${'.'.repeat((uploadAnimationIndex % 3) + 1)}` : '';
   const isLoadingProcessedAudio = isProcessing || (processedAudioUrl && !isProcessedAudioReady);
   const processingMessage = isLoadingProcessedAudio ? `Processing audio${'.'.repeat((processingAnimationIndex % 3) + 1)}` : '';
@@ -518,6 +525,7 @@ function App() {
                     audioFile={uploadedFile}
                     title="Original"
                     theme={theme}
+                    onReady={handleVisibleUploadedAudioReady}
                   />
                   {processedAudioUrl && (
                     <AudioPlayer
