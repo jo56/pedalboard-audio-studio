@@ -24,7 +24,6 @@ function App() {
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [isUploadingFile, setIsUploadingFile] = useState(false);
-  const [isUploadedAudioReady, setIsUploadedAudioReady] = useState(false);
   const [pendingUploadSuccessMessage, setPendingUploadSuccessMessage] = useState<string>('');
   const [uploadAnimationIndex, setUploadAnimationIndex] = useState(0);
   const [processingAnimationIndex, setProcessingAnimationIndex] = useState(0);
