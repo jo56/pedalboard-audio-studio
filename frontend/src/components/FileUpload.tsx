@@ -1,4 +1,4 @@
-﻿import { useCallback } from 'react';
+import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import type { ThemePreset } from '../theme';
 import { cn } from '../utils/classnames';

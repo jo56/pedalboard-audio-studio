@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -6,7 +6,10 @@ from typing import List, Dict, Any, Optional
 import os
 import uuid
 import shutil
+import logging
+import traceback
 from pathlib import Path
+from datetime import datetime, timedelta
 from effects import apply_effects_chain, get_available_effects
 from presets import (
     create_preset,
@@ -16,6 +19,12 @@ from presets import (
     preset_file_path,
     PresetValidationError,
 )
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Pedalboard Audio Processor API")
 
@@ -44,6 +53,12 @@ UPLOAD_DIR = Path("uploads")
 PROCESSED_DIR = Path("processed")
 UPLOAD_DIR.mkdir(exist_ok=True)
 PROCESSED_DIR.mkdir(exist_ok=True)
+
+# File size limit: 500MB (allows ~45 minutes of 24-bit/48kHz stereo WAV)
+MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024  # 500MB
+
+# Session cleanup: files older than 24 hours
+SESSION_MAX_AGE_HOURS = 24
 
 # In-memory storage for file sessions
 file_sessions: Dict[str, Dict[str, Any]] = {}
@@ -142,9 +157,40 @@ async def download_preset(preset_id: str):
     )
 
 
+def cleanup_old_sessions():
+    """Remove files and sessions older than SESSION_MAX_AGE_HOURS"""
+    cutoff_time = datetime.now() - timedelta(hours=SESSION_MAX_AGE_HOURS)
+    sessions_to_remove = []
+
+    for file_id, session in file_sessions.items():
+        upload_time = session.get("uploaded_at")
+        if upload_time and upload_time < cutoff_time:
+            # Clean up files
+            try:
+                file_path = session.get("file_path")
+                if file_path and os.path.exists(file_path):
+                    os.remove(file_path)
+                processed_path = session.get("processed_path")
+                if processed_path and os.path.exists(processed_path):
+                    os.remove(processed_path)
+            except Exception as e:
+                logger.warning(f"Failed to clean up old files for session {file_id}: {e}")
+
+            sessions_to_remove.append(file_id)
+
+    for file_id in sessions_to_remove:
+        del file_sessions[file_id]
+
+    if sessions_to_remove:
+        logger.info(f"Cleaned up {len(sessions_to_remove)} old sessions")
+
+
 @app.post("/upload")
 async def upload_audio(file: UploadFile = File(...)):
     """Upload an audio file and return a file_id for processing"""
+
+    # Clean up old sessions before processing new upload
+    cleanup_old_sessions()
 
     # Validate file type
     allowed_extensions = {".wav", ".mp3", ".flac", ".ogg", ".m4a"}
@@ -160,11 +206,31 @@ async def upload_audio(file: UploadFile = File(...)):
     file_id = str(uuid.uuid4())
     file_path = UPLOAD_DIR / f"{file_id}{file_ext}"
 
-    # Save uploaded file
+    # Save uploaded file with size validation
     try:
+        total_size = 0
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            while chunk := await file.read(8192):  # Read in 8KB chunks
+                total_size += len(chunk)
+                if total_size > MAX_FILE_SIZE_BYTES:
+                    # Clean up partial file
+                    buffer.close()
+                    if file_path.exists():
+                        file_path.unlink()
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"File too large. Maximum size is {MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB"
+                    )
+                buffer.write(chunk)
+    except HTTPException:
+        raise
     except Exception as e:
+        # Clean up on any error
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except:
+                pass
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
 
     # Store session info
@@ -172,6 +238,7 @@ async def upload_audio(file: UploadFile = File(...)):
         "original_name": file.filename,
         "file_path": str(file_path),
         "extension": file_ext,
+        "uploaded_at": datetime.now(),
     }
 
     return {
@@ -217,17 +284,18 @@ async def process_audio(request: ProcessRequest):
     output_path = PROCESSED_DIR / output_filename
 
     existing_processed = session.get("processed_path")
-    if existing_processed and os.path.exists(existing_processed):
+    if existing_processed:
+        # Use Path.unlink with missing_ok to avoid race condition
         try:
-            os.remove(existing_processed)
-        except OSError:
-            # Ignore inability to remove; will be overwritten
+            Path(existing_processed).unlink(missing_ok=True)
+        except Exception:
+            # Ignore any errors; file will be overwritten anyway
             pass
 
     try:
-        print(f"Processing audio with {len(effects_list)} effects")
-        print(f"Input: {input_path}")
-        print(f"Output: {output_path}")
+        logger.info(f"Processing audio with {len(effects_list)} effects")
+        logger.debug(f"Input: {input_path}")
+        logger.debug(f"Output: {output_path}")
 
         apply_effects_chain(
             input_path=input_path,
@@ -241,7 +309,7 @@ async def process_audio(request: ProcessRequest):
         session["processed_path"] = str(output_path)
         session["last_effects"] = effects_list
 
-        print("Processing completed successfully")
+        logger.info("Processing completed successfully")
 
         return {
             "file_id": file_id,
@@ -253,10 +321,9 @@ async def process_audio(request: ProcessRequest):
     except PresetValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as e:
-        import traceback
         error_details = traceback.format_exc()
-        print(f"Error processing audio: {str(e)}")
-        print(error_details)
+        logger.error(f"Error processing audio: {str(e)}")
+        logger.debug(error_details)
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 

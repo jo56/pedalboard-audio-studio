@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import type { DragEvent } from 'react';
 import type { EffectConfig, AvailableEffects } from '../types';
 import EffectControl from './EffectControl';

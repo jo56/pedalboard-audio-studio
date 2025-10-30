@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent, MouseEvent } from 'react';
 import FileUpload from './components/FileUpload';
 import AudioPlayer from './components/AudioPlayer';
@@ -8,6 +8,8 @@ import type { AvailableEffects, EffectConfig } from './types';
 import { DEFAULT_THEME, type ThemePreset } from './theme';
 import { cn } from './utils/classnames';
 import { createEffectId } from './utils/effects';
+import { ANIMATION_DURATION } from './constants';
+import { handleError } from './utils/errorHandler';
 
 
 function App() {
@@ -41,7 +43,7 @@ function App() {
         setAvailableEffects(effectsResponse);
       } catch (err) {
         setError('Failed to load available effects');
-        console.error(err);
+        handleError(err, 'loadEffects');
       }
     };
     loadEffects();
@@ -52,11 +54,11 @@ function App() {
       setErrorFading(false);
       const fadeTimer = setTimeout(() => {
         setErrorFading(true);
-      }, 700);
+      }, ANIMATION_DURATION.MEDIUM);
       const clearTimer = setTimeout(() => {
         setError('');
         setErrorFading(false);
-      }, 1000);
+      }, ANIMATION_DURATION.SLOW);
       return () => {
         clearTimeout(fadeTimer);
         clearTimeout(clearTimer);
@@ -69,11 +71,11 @@ function App() {
       setSuccessFading(false);
       const fadeTimer = setTimeout(() => {
         setSuccessFading(true);
-      }, 700);
+      }, ANIMATION_DURATION.MEDIUM);
       const clearTimer = setTimeout(() => {
         setSuccessMessage('');
         setSuccessFading(false);
-      }, 1000);
+      }, ANIMATION_DURATION.SLOW);
       return () => {
         clearTimeout(fadeTimer);
         clearTimeout(clearTimer);
@@ -99,7 +101,7 @@ function App() {
 
     const intervalId = window.setInterval(() => {
       setUploadAnimationIndex((prev) => (prev + 1) % 3);
-    }, 500);
+    }, ANIMATION_DURATION.FAST);
     uploadAnimationRef.current = intervalId;
 
     return () => {
@@ -126,7 +128,7 @@ function App() {
 
     const intervalId = window.setInterval(() => {
       setProcessingAnimationIndex((prev) => (prev + 1) % 3);
-    }, 500);
+    }, ANIMATION_DURATION.FAST);
     processingAnimationRef.current = intervalId;
 
     return () => {
@@ -169,7 +171,7 @@ function App() {
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to upload file';
       setError(`Upload failed: ${errorMessage}`);
-      console.error('Upload error:', err);
+      handleError(err, 'handleFileSelected');
     } finally {
       setIsUploadingFile(false);
     }
@@ -211,7 +213,7 @@ function App() {
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to process audio';
       setError(`Processing failed: ${errorMessage}`);
-      console.error('Processing error:', err);
+      handleError(err, 'handleProcess');
     } finally {
       setIsProcessing(false);
     }
@@ -272,7 +274,7 @@ function App() {
       setSuccessMessage('Effect settings exported successfully');
       setError('');
     } catch (err) {
-      console.error('Export failed:', err);
+      handleError(err, 'handleExportEffects');
       setError('Failed to export effect settings.');
     }
   };
@@ -325,7 +327,7 @@ function App() {
       setSuccessMessage('Effect settings imported successfully.');
       setError('');
     } catch (err: any) {
-      console.error('Import failed:', err);
+      handleError(err, 'handleImportFile');
       setError(`Failed to import effect settings: ${err.message || err}`);
     } finally {
       event.target.value = '';
@@ -367,7 +369,7 @@ function App() {
         document.body.removeChild(anchor);
         URL.revokeObjectURL(url);
       } catch (err) {
-        console.error('Download failed:', err);
+        handleError(err, 'handleDownload');
         setError('Failed to download processed audio. Please try again.');
       }
     })();
@@ -577,6 +579,3 @@ function App() {
 }
 
 export default App;
-
-
-
