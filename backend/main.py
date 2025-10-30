@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -10,6 +10,9 @@ import logging
 import traceback
 from pathlib import Path
 from datetime import datetime, timedelta
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from effects import apply_effects_chain, get_available_effects
 from presets import (
     create_preset,
@@ -19,6 +22,12 @@ from presets import (
     preset_file_path,
     PresetValidationError,
 )
+from security import (
+    UserSessionManager,
+    sanitize_filename,
+    validate_audio_file_content,
+    get_client_identifier,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,7 +35,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="Pedalboard Audio Processor API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Initialize session manager
+session_manager = UserSessionManager()
 
 # CORS configuration for frontend
 _DEFAULT_CORS_ORIGINS = ["http://localhost:5173", "http://localhost:3000"]
@@ -54,8 +70,9 @@ PROCESSED_DIR = Path("processed")
 UPLOAD_DIR.mkdir(exist_ok=True)
 PROCESSED_DIR.mkdir(exist_ok=True)
 
-# File size limit: 500MB (allows ~45 minutes of 24-bit/48kHz stereo WAV)
-MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024  # 500MB
+# File size limit: Per-user limit (managed by session_manager)
+# Global absolute maximum as final safety net
+ABSOLUTE_MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024  # 500MB
 
 # Session cleanup: files older than 24 hours
 SESSION_MAX_AGE_HOURS = 24
@@ -159,13 +176,23 @@ async def download_preset(preset_id: str):
 
 def cleanup_old_sessions():
     """Remove files and sessions older than SESSION_MAX_AGE_HOURS"""
+    # Clean up user sessions and get list of file IDs to remove
+    files_to_clean = session_manager.cleanup_expired_sessions()
+
+    # Also clean up old file_sessions based on timestamp
     cutoff_time = datetime.now() - timedelta(hours=SESSION_MAX_AGE_HOURS)
     sessions_to_remove = []
 
     for file_id, session in file_sessions.items():
         upload_time = session.get("uploaded_at")
         if upload_time and upload_time < cutoff_time:
-            # Clean up files
+            files_to_clean.append(file_id)
+            sessions_to_remove.append(file_id)
+
+    # Clean up actual files
+    for file_id in files_to_clean:
+        if file_id in file_sessions:
+            session = file_sessions[file_id]
             try:
                 file_path = session.get("file_path")
                 if file_path and os.path.exists(file_path):
@@ -176,25 +203,31 @@ def cleanup_old_sessions():
             except Exception as e:
                 logger.warning(f"Failed to clean up old files for session {file_id}: {e}")
 
-            sessions_to_remove.append(file_id)
-
+    # Remove from file_sessions dict
     for file_id in sessions_to_remove:
         del file_sessions[file_id]
 
     if sessions_to_remove:
-        logger.info(f"Cleaned up {len(sessions_to_remove)} old sessions")
+        logger.info(f"Cleaned up {len(sessions_to_remove)} old file sessions")
 
 
 @app.post("/upload")
-async def upload_audio(file: UploadFile = File(...)):
+@limiter.limit("10/minute")
+async def upload_audio(request: Request, file: UploadFile = File(...)):
     """Upload an audio file and return a file_id for processing"""
+
+    # Get user session identifier
+    user_id = get_client_identifier(request)
 
     # Clean up old sessions before processing new upload
     cleanup_old_sessions()
 
+    # Sanitize filename
+    safe_filename = sanitize_filename(file.filename)
+
     # Validate file type
     allowed_extensions = {".wav", ".mp3", ".flac", ".ogg", ".m4a"}
-    file_ext = Path(file.filename).suffix.lower()
+    file_ext = Path(safe_filename).suffix.lower()
 
     if file_ext not in allowed_extensions:
         raise HTTPException(
@@ -212,16 +245,36 @@ async def upload_audio(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             while chunk := await file.read(8192):  # Read in 8KB chunks
                 total_size += len(chunk)
-                if total_size > MAX_FILE_SIZE_BYTES:
-                    # Clean up partial file
+
+                # Check against absolute maximum first
+                if total_size > ABSOLUTE_MAX_FILE_SIZE_BYTES:
                     buffer.close()
                     if file_path.exists():
                         file_path.unlink()
                     raise HTTPException(
                         status_code=413,
-                        detail=f"File too large. Maximum size is {MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB"
+                        detail=f"File too large. Maximum size is {ABSOLUTE_MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB"
                     )
                 buffer.write(chunk)
+
+        # Check user quota AFTER knowing final size
+        can_upload, error_msg = session_manager.can_upload_file(user_id, total_size)
+        if not can_upload:
+            # Clean up file
+            if file_path.exists():
+                file_path.unlink()
+            raise HTTPException(status_code=429, detail=error_msg)
+
+        # Validate file content matches extension
+        is_valid, error_msg = validate_audio_file_content(str(file_path), file_ext)
+        if not is_valid:
+            if file_path.exists():
+                file_path.unlink()
+            raise HTTPException(status_code=400, detail=error_msg)
+
+        # Register file with session manager
+        session_manager.get_or_create_session(user_id).add_file(file_id, total_size)
+
     except HTTPException:
         raise
     except Exception as e:
@@ -231,26 +284,38 @@ async def upload_audio(file: UploadFile = File(...)):
                 file_path.unlink()
             except:
                 pass
-        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+        logger.error(f"Upload error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to save file")
 
     # Store session info
     file_sessions[file_id] = {
-        "original_name": file.filename,
+        "original_name": safe_filename,
         "file_path": str(file_path),
         "extension": file_ext,
         "uploaded_at": datetime.now(),
+        "user_id": user_id,
+        "file_size": total_size,
     }
+
+    logger.info(f"File uploaded: {file_id} by {user_id} ({total_size} bytes)")
 
     return {
         "file_id": file_id,
-        "filename": file.filename,
+        "filename": safe_filename,
         "message": "File uploaded successfully"
     }
 
 
 @app.post("/process")
-async def process_audio(request: ProcessRequest):
+@limiter.limit("30/minute")
+async def process_audio(http_request: Request, request: ProcessRequest):
     """Process audio file with effect chain or preset."""
+
+    # Get user session and check processing quota
+    user_id = get_client_identifier(http_request)
+    can_process, error_msg = session_manager.can_process(user_id)
+    if not can_process:
+        raise HTTPException(status_code=429, detail=error_msg)
 
     file_id = request.file_id
 
@@ -293,9 +358,12 @@ async def process_audio(request: ProcessRequest):
             pass
 
     try:
-        logger.info(f"Processing audio with {len(effects_list)} effects")
+        logger.info(f"Processing audio with {len(effects_list)} effects for user {user_id}")
         logger.debug(f"Input: {input_path}")
         logger.debug(f"Output: {output_path}")
+
+        # Record processing attempt
+        session_manager.get_or_create_session(user_id).add_process()
 
         apply_effects_chain(
             input_path=input_path,
@@ -321,10 +389,14 @@ async def process_audio(request: ProcessRequest):
     except PresetValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as e:
-        error_details = traceback.format_exc()
         logger.error(f"Error processing audio: {str(e)}")
-        logger.debug(error_details)
-        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+        # Don't expose detailed error traces in production
+        if os.getenv("DEBUG", "").lower() == "true":
+            error_details = traceback.format_exc()
+            logger.debug(error_details)
+            raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+        else:
+            raise HTTPException(status_code=500, detail="Processing failed. Please check your file and try again.")
 
 
 @app.delete("/processed/{file_id}")
@@ -387,6 +459,8 @@ async def cleanup_files(file_id: str):
         raise HTTPException(status_code=404, detail="File not found")
 
     session = file_sessions[file_id]
+    user_id = session.get("user_id")
+    file_size = session.get("file_size", 0)
 
     try:
         if os.path.exists(session["file_path"]):
@@ -395,12 +469,22 @@ async def cleanup_files(file_id: str):
         if processed_path and os.path.exists(processed_path):
             os.remove(processed_path)
 
+        # Update session manager
+        if user_id:
+            user_session = session_manager.get_or_create_session(user_id)
+            user_session.remove_file(file_id)
+            # Adjust byte count
+            user_session.total_bytes_uploaded = max(0, user_session.total_bytes_uploaded - file_size)
+
         del file_sessions[file_id]
+
+        logger.info(f"Files cleaned up: {file_id}")
 
         return {"message": "Files cleaned up successfully"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Cleanup failed: {str(e)}")
+        logger.error(f"Cleanup error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Cleanup failed")
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ import { DEFAULT_THEME, type ThemePreset } from './theme';
 import { cn } from './utils/classnames';
 import { createEffectId } from './utils/effects';
 import { ANIMATION_DURATION } from './constants';
-import { handleError } from './utils/errorHandler';
+import { handleError, getErrorMessage } from './utils/errorHandler';
 
 
 function App() {
@@ -169,8 +169,7 @@ function App() {
       setPendingUploadSuccessMessage('File uploaded successfully');
       setPendingFile(file);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Failed to upload file';
-      setError(`Upload failed: ${errorMessage}`);
+      setError(getErrorMessage(err));
       handleError(err, 'handleFileSelected');
     } finally {
       setIsUploadingFile(false);
@@ -211,8 +210,7 @@ function App() {
       setProcessedAudioUrl(cacheBustedUrl);
       setPendingSuccessMessage(response.message || 'Audio processed successfully!');
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Failed to process audio';
-      setError(`Processing failed: ${errorMessage}`);
+      setError(getErrorMessage(err));
       handleError(err, 'handleProcess');
     } finally {
       setIsProcessing(false);
@@ -240,8 +238,7 @@ function App() {
       await audioAPI.clearProcessed(fileId);
     } catch (err: any) {
       if (err.response?.status !== 404) {
-        const errorMessage = err.response?.data?.detail || err.message || 'Failed to clear processed audio';
-        setError(errorMessage);
+        setError(getErrorMessage(err));
         return;
       }
     }
@@ -328,7 +325,7 @@ function App() {
       setError('');
     } catch (err: any) {
       handleError(err, 'handleImportFile');
-      setError(`Failed to import effect settings: ${err.message || err}`);
+      setError(getErrorMessage(err));
     } finally {
       event.target.value = '';
     }
