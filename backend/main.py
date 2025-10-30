@@ -1,6 +1,7 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, BackgroundTasks
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.background import BackgroundTask
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import os
@@ -490,11 +491,14 @@ async def download_processed(file_id: str, format: Optional[str] = None):
             media_type = media_types.get(format_lower, 'audio/mpeg')
 
             # Return the converted file and clean it up after sending
+            def cleanup_converted_file():
+                converted_path.unlink(missing_ok=True)
+
             return FileResponse(
                 str(converted_path),
                 media_type=media_type,
                 filename=download_name,
-                background=lambda: converted_path.unlink(missing_ok=True)
+                background=BackgroundTask(cleanup_converted_file)
             )
 
         except Exception as e:

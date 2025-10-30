@@ -23,14 +23,18 @@ A fullstack web application that provides a UI for manipulating audio files usin
 - **uv**
 - **Pedalboard 0.9.8** - Spotify's audio effects library
 - **Uvicorn** - ASGI server
+- **slowapi** - Rate limiting middleware
+- **python-magic** - File type validation
+- **aiofiles** - Async file operations
 
 
 ### Frontend
-- **React 18** with **TypeScript**
-- **Vite** build tooling
-- **Tailwind CSS** styling
+- **React 19** with **TypeScript**
+- **Vite 7** build tooling
+- **Tailwind CSS 4** styling
 - **WaveSurfer.js** for waveform rendering
 - **Axios** HTTP client
+- **React Dropzone** for file uploads
 
 ## Project Structure
 
@@ -40,9 +44,12 @@ pedalboard-test/
 |   |-- main.py             # FastAPI server
 |   |-- effects.py          # Effect registry and processing
 |   |-- presets.py          # Preset persistence helpers
+|   |-- security.py         # Security utilities and session management
 |   |-- pyproject.toml      # Python dependencies managed by uv
+|   |-- .env.example        # Environment variables template
 |   |-- uploads/            # Uploaded audio (runtime)
 |   |-- processed/          # Processed audio (runtime)
+|   |-- presets/            # Saved effect presets (runtime)
 |   |-- impulses/           # Impulse responses for convolution effects
 |   `-- plugins/            # Optional VST3 binaries
 |-- frontend/
@@ -54,10 +61,12 @@ pedalboard-test/
 |   |   |-- theme.ts
 |   |   |-- types.ts
 |   |   `-- App.tsx
+|   |-- .env.example        # Environment variables template
 |   |-- package.json
 |   `-- vite.config.ts
-|-- README.md
-`-- DEPLOYMENT.md
+|-- railway.json            # Railway deployment configuration
+|-- scripts/                # Deployment and utility scripts
+`-- README.md
 ```
 
 ## Setup Instructions
@@ -79,7 +88,10 @@ uv run uvicorn main:app --reload
 ```
 
 The backend will be available at `http://localhost:8000`.
-Create a `.env` file (see `backend/.env.example`) to list any production origins that should be allowed through CORS, e.g. your Cloudflare Pages URL.
+
+Create a `.env` file (see `backend/.env.example`) to configure:
+- `CORS_ALLOWED_ORIGINS` - Production origins for CORS (e.g., your Cloudflare Pages URL)
+- `LOCAL_DEPLOYMENT` - Set to `true` in development to disable rate limiting
 
 ### Frontend Setup
 
@@ -177,19 +189,22 @@ Example preset creation payload:
 
 ### Recommended: Railway backend + Cloudflare Pages frontend
 
+The project includes `railway.json` configured for automatic Railway deployments using Nixpacks.
+
 1. Push this repository to GitHub so both platforms can access it.
-2. **Railway (backend)**  
-   - Create a new service from the `backend/` directory.  
-   - Set the build command to `pip install uv && uv sync` and the start command to `uv run uvicorn main:app --host 0.0.0.0 --port $PORT`.  
-   - Add an environment variable `CORS_ALLOWED_ORIGINS` listing your Cloudflare Pages domain (comma separated if you have multiple origins).  
+2. **Railway (backend)**
+   - Create a new service and connect your GitHub repository.
+   - Railway will automatically detect `railway.json` and use Nixpacks builder.
+   - Set the root directory to `backend/` in Railway settings.
+   - Add environment variables:
+     - `CORS_ALLOWED_ORIGINS` - Your Cloudflare Pages domain (comma separated for multiple origins)
+     - `LOCAL_DEPLOYMENT=false` - Enable rate limiting in production
    - Attach a volume if you need processed audio or presets to persist across deployments.
-3. **Cloudflare Pages (frontend)**  
-   - Create a Pages project from the same repo and set the root directory to `frontend`.  
-   - Use `npm run build` as the build command and `dist` as the output directory.  
+3. **Cloudflare Pages (frontend)**
+   - Create a Pages project from the same repo and set the root directory to `frontend`.
+   - Use `npm run build` as the build command and `dist` as the output directory.
    - Define `VITE_API_URL` (for both Preview and Production environments) with the public Railway URL from step 2.
 4. Rebuild both services. The frontend will talk to the backend via the configured API URL with CORS automatically satisfied.
-
-See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for alternate topologies (single-service Railway, Vercel, Render, Fly.io, AWS) and additional configuration tips.
 
 ## Development Notes
 
@@ -212,11 +227,15 @@ See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for alternate topologies (single-servic
 - [ ] Export to multiple audio formats
 - [ ] Optional user authentication and cloud storage
 
-## Security and Privacy
+## Security Features
 
-- No API keys or credentials are stored in this repo; set secrets via deployment platforms or local environment variables.
-- Runtime directories (`backend/uploads`, `backend/processed`, `backend/presets`, `backend/plugins`, `backend/impulses`) are git ignored; clear any personal audio files before publishing.
-- Review deployment configuration (for example Railway variables) before making the repository public.
+- **Rate Limiting** - API endpoints are rate-limited using slowapi (configurable via `LOCAL_DEPLOYMENT` environment variable)
+- **User Session Management** - Per-user file quotas and processing limits to prevent abuse
+- **File Validation** - Uploaded audio files are validated for content type and size
+- **Session Cleanup** - Automatic cleanup of files older than 24 hours
+- **CORS Protection** - Configurable CORS origins for frontend access
+- No API keys or credentials are stored in this repo; set secrets via deployment platforms or local environment variables
+- Runtime directories (`backend/uploads`, `backend/processed`, `backend/presets`, `backend/plugins`, `backend/impulses`) are git ignored
 
 ## License
 
