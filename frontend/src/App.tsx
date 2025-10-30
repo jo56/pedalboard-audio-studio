@@ -31,6 +31,7 @@ function App() {
   const [processingAnimationIndex, setProcessingAnimationIndex] = useState(0);
   const [errorFading, setErrorFading] = useState(false);
   const [successFading, setSuccessFading] = useState(false);
+  const [downloadFormat, setDownloadFormat] = useState<string>('original');
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const uploadAnimationRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const processingAnimationRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -305,11 +306,12 @@ function App() {
         if (!entry || typeof entry !== 'object' || !entry.type) {
           throw new Error('Invalid effect entry detected.');
         }
-        const type = String(entry.type);
+        const typeRaw = String(entry.type);
+        const type = typeRaw.toLowerCase();
         const params = entry.params && typeof entry.params === 'object' ? entry.params : {};
 
         if (!availableEffects[type]) {
-          throw new Error(`Unknown effect type: ${type}`);
+          throw new Error(`Unknown effect type: ${typeRaw}`);
         }
 
         normalized.push({
@@ -334,13 +336,19 @@ function App() {
   const handleDownload = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
 
-    if (!processedAudioUrl) {
+    if (!fileId) {
       return;
     }
 
     void (async () => {
       try {
-        const response = await fetch(processedAudioUrl);
+        // Build download URL with format parameter
+        const format = downloadFormat === 'original' ? '' : downloadFormat;
+        const downloadUrl = format
+          ? `${audioAPI.getDownloadUrl(fileId)}?format=${format}`
+          : audioAPI.getDownloadUrl(fileId);
+
+        const response = await fetch(downloadUrl);
 
         if (!response.ok) {
           throw new Error(`Download failed with status ${response.status}`);
@@ -355,10 +363,13 @@ function App() {
           const extensionIndex = uploadedFile.name.lastIndexOf('.');
           const hasExtension = extensionIndex > -1;
           const baseName = hasExtension ? uploadedFile.name.slice(0, extensionIndex) : uploadedFile.name;
-          const extension = hasExtension ? uploadedFile.name.slice(extensionIndex) : '.wav';
+          const extension = downloadFormat === 'original'
+            ? (hasExtension ? uploadedFile.name.slice(extensionIndex) : '.wav')
+            : `.${downloadFormat}`;
           anchor.download = `${baseName}-processed${extension}`;
         } else {
-          anchor.download = 'processed-audio.wav';
+          const extension = downloadFormat === 'original' ? '.wav' : `.${downloadFormat}`;
+          anchor.download = `processed-audio${extension}`;
         }
 
         document.body.appendChild(anchor);
@@ -544,9 +555,25 @@ function App() {
                         {isProcessing ? 'Processing…' : 'Process Audio'}
                       </button>
                       {processedAudioUrl && (
-                        <button onClick={handleDownload} className={secondaryButtonClass}>
-                          Download
-                        </button>
+                        <>
+                          <select
+                            value={downloadFormat}
+                            onChange={(e) => setDownloadFormat(e.target.value)}
+                            className={cn(
+                              'px-3 py-2 text-sm font-semibold rounded transition-colors duration-200 border',
+                              theme.inputClass || 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
+                            )}
+                          >
+                            <option value="original">Original Format</option>
+                            <option value="wav">WAV (Lossless)</option>
+                            <option value="mp3">MP3</option>
+                            <option value="flac">FLAC (Lossless)</option>
+                            <option value="ogg">OGG</option>
+                          </select>
+                          <button onClick={handleDownload} className={secondaryButtonClass}>
+                            Download
+                          </button>
+                        </>
                       )}
                       <button onClick={handleReset} className={ghostButtonClass}>
                         Reset

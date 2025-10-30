@@ -35,7 +35,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize rate limiter
+# Initialize rate limiter (disabled for local deployments)
+# Set LOCAL_DEPLOYMENT=true in development to disable rate limiting
+IS_LOCAL_DEPLOYMENT = os.getenv("LOCAL_DEPLOYMENT", "false").lower() == "true"
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="Pedalboard Audio Processor API")
 app.state.limiter = limiter
@@ -212,7 +214,7 @@ def cleanup_old_sessions():
 
 
 @app.post("/upload")
-@limiter.limit("10/minute")
+@limiter.limit("50/hour", exempt_when=lambda: IS_LOCAL_DEPLOYMENT)
 async def upload_audio(request: Request, file: UploadFile = File(...)):
     """Upload an audio file and return a file_id for processing"""
 
@@ -307,17 +309,17 @@ async def upload_audio(request: Request, file: UploadFile = File(...)):
 
 
 @app.post("/process")
-@limiter.limit("30/minute")
-async def process_audio(http_request: Request, request: ProcessRequest):
+@limiter.limit("200/hour", exempt_when=lambda: IS_LOCAL_DEPLOYMENT)
+async def process_audio(request: Request, body: ProcessRequest):
     """Process audio file with effect chain or preset."""
 
     # Get user session and check processing quota
-    user_id = get_client_identifier(http_request)
+    user_id = get_client_identifier(request)
     can_process, error_msg = session_manager.can_process(user_id)
     if not can_process:
         raise HTTPException(status_code=429, detail=error_msg)
 
-    file_id = request.file_id
+    file_id = body.file_id
 
     # Validate file_id
     if file_id not in file_sessions:
@@ -333,16 +335,16 @@ async def process_audio(http_request: Request, request: ProcessRequest):
 
     # Resolve effect chain from request or preset
     effects_list: List[Dict[str, Any]]
-    if request.preset_id:
+    if body.preset_id:
         try:
-            preset = load_preset(request.preset_id)
+            preset = load_preset(body.preset_id)
         except FileNotFoundError:
             raise HTTPException(status_code=404, detail="Preset not found")
         effects_list = preset.get("effects", [])
     else:
         effects_list = [
             {"type": effect.type, "params": effect.params}
-            for effect in (request.effects or [])
+            for effect in (body.effects or [])
         ]
 
     output_filename = f"{file_id}_processed{extension}"
@@ -424,8 +426,13 @@ async def delete_processed_only(file_id: str):
 
 
 @app.get("/download/{file_id}")
-async def download_processed(file_id: str):
-    """Download processed audio file"""
+async def download_processed(file_id: str, format: Optional[str] = None):
+    """Download processed audio file
+
+    Args:
+        file_id: The file identifier
+        format: Optional output format ('wav', 'mp3', 'flac', 'ogg'). If not specified, uses original format.
+    """
 
     if file_id not in file_sessions:
         raise HTTPException(status_code=404, detail="File not found")
@@ -441,12 +448,78 @@ async def download_processed(file_id: str):
         raise HTTPException(status_code=404, detail="Processed file not found")
 
     original_name = Path(session["original_name"]).stem
-    extension = session["extension"]
-    download_name = f"{original_name}_processed{extension}"
+    original_extension = session["extension"]
+
+    # If format conversion is requested
+    if format and format.lower() != original_extension.lstrip('.'):
+        from pedalboard.io import AudioFile
+
+        # Validate format
+        allowed_formats = {'wav', 'mp3', 'flac', 'ogg'}
+        format_lower = format.lower()
+        if format_lower not in allowed_formats:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported format. Allowed: {', '.join(allowed_formats)}"
+            )
+
+        # Create converted file path
+        converted_extension = f".{format_lower}"
+        converted_filename = f"{file_id}_converted{converted_extension}"
+        converted_path = PROCESSED_DIR / converted_filename
+
+        try:
+            # Read the processed audio
+            with AudioFile(processed_path) as f:
+                audio = f.read(f.frames)
+                sample_rate = f.samplerate
+
+            # Write in the requested format
+            with AudioFile(str(converted_path), 'w', sample_rate, audio.shape[0]) as f:
+                f.write(audio)
+
+            download_name = f"{original_name}_processed{converted_extension}"
+
+            # Determine media type
+            media_types = {
+                'wav': 'audio/wav',
+                'mp3': 'audio/mpeg',
+                'flac': 'audio/flac',
+                'ogg': 'audio/ogg'
+            }
+            media_type = media_types.get(format_lower, 'audio/mpeg')
+
+            # Return the converted file and clean it up after sending
+            return FileResponse(
+                str(converted_path),
+                media_type=media_type,
+                filename=download_name,
+                background=lambda: converted_path.unlink(missing_ok=True)
+            )
+
+        except Exception as e:
+            logger.error(f"Format conversion error: {str(e)}")
+            # Clean up partial file if it exists
+            if converted_path.exists():
+                converted_path.unlink(missing_ok=True)
+            raise HTTPException(status_code=500, detail=f"Failed to convert audio format: {str(e)}")
+
+    # Return original format
+    download_name = f"{original_name}_processed{original_extension}"
+
+    # Determine media type based on extension
+    media_types = {
+        '.wav': 'audio/wav',
+        '.mp3': 'audio/mpeg',
+        '.flac': 'audio/flac',
+        '.ogg': 'audio/ogg',
+        '.m4a': 'audio/mp4'
+    }
+    media_type = media_types.get(original_extension, 'audio/mpeg')
 
     return FileResponse(
         processed_path,
-        media_type="audio/mpeg",
+        media_type=media_type,
         filename=download_name
     )
 
