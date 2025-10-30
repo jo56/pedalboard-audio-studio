@@ -1,5 +1,3 @@
-﻿// Type definitions for the application
-
 export type EffectParamType = 'float' | 'int' | 'enum' | 'string' | 'bool' | 'file' | 'dict';
 
 export interface EffectParam {

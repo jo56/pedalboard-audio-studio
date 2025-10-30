@@ -565,45 +565,47 @@ _register_effect(
     ),
 )
 
-_register_effect(
-    "vst3",
-    EffectDefinition(
-        name="VST3 Plugin",
-        description="Hosts an external VST3 effect or instrument",
-        plugin_factory=VST3Plugin,
-        params={
-            "plugin_path": EffectParamSpec(
-                type=ParamType.STRING,
-                default="",
-                required=True,
-                transform=_resolve_plugin_path,
-                help_text="Absolute path or relative to backend/plugins",
-            ),
-            "plugin_name": EffectParamSpec(
-                type=ParamType.STRING,
-                default=None,
-                skip_if_none=True,
-                help_text="Optional name when plugin bundle contains multiples",
-            ),
-            "initialization_timeout": EffectParamSpec(
-                type=ParamType.FLOAT,
-                default=10.0,
-                min=1.0,
-                max=120.0,
-                help_text="Seconds to wait for plugin to finish loading",
-            ),
-            "parameter_values": EffectParamSpec(
-                type=ParamType.DICT,
-                default=None,
-                skip_if_none=True,
-                help_text="Dictionary of parameter overrides",
-            ),
-        },
-        tags=["external"],
-        notes="Requires compatible VST3 binaries installed on the host system.",
-        aliases=["vst3plugin"],
-    ),
-)
+# VST3 support disabled for public deployment security
+# Uncomment to re-enable for private/trusted environments
+# _register_effect(
+#     "vst3",
+#     EffectDefinition(
+#         name="VST3 Plugin",
+#         description="Hosts an external VST3 effect or instrument",
+#         plugin_factory=VST3Plugin,
+#         params={
+#             "plugin_path": EffectParamSpec(
+#                 type=ParamType.STRING,
+#                 default="",
+#                 required=True,
+#                 transform=_resolve_plugin_path,
+#                 help_text="Absolute path or relative to backend/plugins",
+#             ),
+#             "plugin_name": EffectParamSpec(
+#                 type=ParamType.STRING,
+#                 default=None,
+#                 skip_if_none=True,
+#                 help_text="Optional name when plugin bundle contains multiples",
+#             ),
+#             "initialization_timeout": EffectParamSpec(
+#                 type=ParamType.FLOAT,
+#                 default=10.0,
+#                 min=1.0,
+#                 max=120.0,
+#                 help_text="Seconds to wait for plugin to finish loading",
+#             ),
+#             "parameter_values": EffectParamSpec(
+#                 type=ParamType.DICT,
+#                 default=None,
+#                 skip_if_none=True,
+#                 help_text="Dictionary of parameter overrides",
+#             ),
+#         },
+#         tags=["external"],
+#         notes="Requires compatible VST3 binaries installed on the host system.",
+#         aliases=["vst3plugin"],
+#     ),
+# )
 
 
 def _coerce_param_value(param_name: str, spec: EffectParamSpec, raw_value: Any) -> Any:

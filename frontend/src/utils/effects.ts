@@ -1,4 +1,5 @@
 import type { EffectParam } from '../types';
+import { logWarning } from './errorHandler';
 
 /**
  * Generate a unique identifier for an effect instance.
@@ -40,7 +41,7 @@ export const getDefaultParamValue = (
       return '';
     default:
       if (paramKey) {
-        console.warn(`No default value for parameter '${paramKey}'`);
+        logWarning(`No default value for parameter '${paramKey}'`, 'getDefaultParamValue');
       }
       return null;
   }

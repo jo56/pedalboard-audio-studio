@@ -1,5 +1,3 @@
-﻿// API service for communicating with the backend
-
 import axios from 'axios';
 import type {
   AvailableEffects,

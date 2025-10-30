@@ -1,4 +1,4 @@
-﻿type RgbColor = { r: number; g: number; b: number };
+type RgbColor = { r: number; g: number; b: number };
 
 const clampChannel = (value: number): number => {
   if (Number.isNaN(value)) return 0;

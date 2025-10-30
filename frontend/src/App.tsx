@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent, MouseEvent } from 'react';
 import FileUpload from './components/FileUpload';
 import AudioPlayer from './components/AudioPlayer';
@@ -8,6 +8,8 @@ import type { AvailableEffects, EffectConfig } from './types';
 import { DEFAULT_THEME, type ThemePreset } from './theme';
 import { cn } from './utils/classnames';
 import { createEffectId } from './utils/effects';
+import { ANIMATION_DURATION } from './constants';
+import { handleError, getErrorMessage } from './utils/errorHandler';
 
 
 function App() {
@@ -29,6 +31,7 @@ function App() {
   const [processingAnimationIndex, setProcessingAnimationIndex] = useState(0);
   const [errorFading, setErrorFading] = useState(false);
   const [successFading, setSuccessFading] = useState(false);
+  const [downloadFormat, setDownloadFormat] = useState<string>('original');
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const uploadAnimationRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const processingAnimationRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -41,7 +44,7 @@ function App() {
         setAvailableEffects(effectsResponse);
       } catch (err) {
         setError('Failed to load available effects');
-        console.error(err);
+        handleError(err, 'loadEffects');
       }
     };
     loadEffects();
@@ -52,11 +55,11 @@ function App() {
       setErrorFading(false);
       const fadeTimer = setTimeout(() => {
         setErrorFading(true);
-      }, 700);
+      }, ANIMATION_DURATION.MEDIUM);
       const clearTimer = setTimeout(() => {
         setError('');
         setErrorFading(false);
-      }, 1000);
+      }, ANIMATION_DURATION.SLOW);
       return () => {
         clearTimeout(fadeTimer);
         clearTimeout(clearTimer);
@@ -69,11 +72,11 @@ function App() {
       setSuccessFading(false);
       const fadeTimer = setTimeout(() => {
         setSuccessFading(true);
-      }, 700);
+      }, ANIMATION_DURATION.MEDIUM);
       const clearTimer = setTimeout(() => {
         setSuccessMessage('');
         setSuccessFading(false);
-      }, 1000);
+      }, ANIMATION_DURATION.SLOW);
       return () => {
         clearTimeout(fadeTimer);
         clearTimeout(clearTimer);
@@ -99,7 +102,7 @@ function App() {
 
     const intervalId = window.setInterval(() => {
       setUploadAnimationIndex((prev) => (prev + 1) % 3);
-    }, 500);
+    }, ANIMATION_DURATION.FAST);
     uploadAnimationRef.current = intervalId;
 
     return () => {
@@ -126,7 +129,7 @@ function App() {
 
     const intervalId = window.setInterval(() => {
       setProcessingAnimationIndex((prev) => (prev + 1) % 3);
-    }, 500);
+    }, ANIMATION_DURATION.FAST);
     processingAnimationRef.current = intervalId;
 
     return () => {
@@ -167,9 +170,8 @@ function App() {
       setPendingUploadSuccessMessage('File uploaded successfully');
       setPendingFile(file);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Failed to upload file';
-      setError(`Upload failed: ${errorMessage}`);
-      console.error('Upload error:', err);
+      setError(getErrorMessage(err));
+      handleError(err, 'handleFileSelected');
     } finally {
       setIsUploadingFile(false);
     }
@@ -209,9 +211,8 @@ function App() {
       setProcessedAudioUrl(cacheBustedUrl);
       setPendingSuccessMessage(response.message || 'Audio processed successfully!');
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Failed to process audio';
-      setError(`Processing failed: ${errorMessage}`);
-      console.error('Processing error:', err);
+      setError(getErrorMessage(err));
+      handleError(err, 'handleProcess');
     } finally {
       setIsProcessing(false);
     }
@@ -238,8 +239,7 @@ function App() {
       await audioAPI.clearProcessed(fileId);
     } catch (err: any) {
       if (err.response?.status !== 404) {
-        const errorMessage = err.response?.data?.detail || err.message || 'Failed to clear processed audio';
-        setError(errorMessage);
+        setError(getErrorMessage(err));
         return;
       }
     }
@@ -272,7 +272,7 @@ function App() {
       setSuccessMessage('Effect settings exported successfully');
       setError('');
     } catch (err) {
-      console.error('Export failed:', err);
+      handleError(err, 'handleExportEffects');
       setError('Failed to export effect settings.');
     }
   };
@@ -306,11 +306,12 @@ function App() {
         if (!entry || typeof entry !== 'object' || !entry.type) {
           throw new Error('Invalid effect entry detected.');
         }
-        const type = String(entry.type);
+        const typeRaw = String(entry.type);
+        const type = typeRaw.toLowerCase();
         const params = entry.params && typeof entry.params === 'object' ? entry.params : {};
 
         if (!availableEffects[type]) {
-          throw new Error(`Unknown effect type: ${type}`);
+          throw new Error(`Unknown effect type: ${typeRaw}`);
         }
 
         normalized.push({
@@ -325,8 +326,8 @@ function App() {
       setSuccessMessage('Effect settings imported successfully.');
       setError('');
     } catch (err: any) {
-      console.error('Import failed:', err);
-      setError(`Failed to import effect settings: ${err.message || err}`);
+      handleError(err, 'handleImportFile');
+      setError(getErrorMessage(err));
     } finally {
       event.target.value = '';
     }
@@ -335,13 +336,19 @@ function App() {
   const handleDownload = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
 
-    if (!processedAudioUrl) {
+    if (!fileId) {
       return;
     }
 
     void (async () => {
       try {
-        const response = await fetch(processedAudioUrl);
+        // Build download URL with format parameter
+        const format = downloadFormat === 'original' ? '' : downloadFormat;
+        const downloadUrl = format
+          ? `${audioAPI.getDownloadUrl(fileId)}?format=${format}`
+          : audioAPI.getDownloadUrl(fileId);
+
+        const response = await fetch(downloadUrl);
 
         if (!response.ok) {
           throw new Error(`Download failed with status ${response.status}`);
@@ -356,10 +363,13 @@ function App() {
           const extensionIndex = uploadedFile.name.lastIndexOf('.');
           const hasExtension = extensionIndex > -1;
           const baseName = hasExtension ? uploadedFile.name.slice(0, extensionIndex) : uploadedFile.name;
-          const extension = hasExtension ? uploadedFile.name.slice(extensionIndex) : '.wav';
+          const extension = downloadFormat === 'original'
+            ? (hasExtension ? uploadedFile.name.slice(extensionIndex) : '.wav')
+            : `.${downloadFormat}`;
           anchor.download = `${baseName}-processed${extension}`;
         } else {
-          anchor.download = 'processed-audio.wav';
+          const extension = downloadFormat === 'original' ? '.wav' : `.${downloadFormat}`;
+          anchor.download = `processed-audio${extension}`;
         }
 
         document.body.appendChild(anchor);
@@ -367,7 +377,7 @@ function App() {
         document.body.removeChild(anchor);
         URL.revokeObjectURL(url);
       } catch (err) {
-        console.error('Download failed:', err);
+        handleError(err, 'handleDownload');
         setError('Failed to download processed audio. Please try again.');
       }
     })();
@@ -545,9 +555,25 @@ function App() {
                         {isProcessing ? 'Processing…' : 'Process Audio'}
                       </button>
                       {processedAudioUrl && (
-                        <button onClick={handleDownload} className={secondaryButtonClass}>
-                          Download
-                        </button>
+                        <>
+                          <select
+                            value={downloadFormat}
+                            onChange={(e) => setDownloadFormat(e.target.value)}
+                            className={cn(
+                              'px-3 py-2 text-sm font-semibold rounded transition-colors duration-200 border',
+                              theme.inputClass || 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
+                            )}
+                          >
+                            <option value="original">Original Format</option>
+                            <option value="wav">WAV (Lossless)</option>
+                            <option value="mp3">MP3</option>
+                            <option value="flac">FLAC (Lossless)</option>
+                            <option value="ogg">OGG</option>
+                          </select>
+                          <button onClick={handleDownload} className={secondaryButtonClass}>
+                            Download
+                          </button>
+                        </>
                       )}
                       <button onClick={handleReset} className={ghostButtonClass}>
                         Reset
@@ -577,6 +603,3 @@ function App() {
 }
 
 export default App;
-
-
-
