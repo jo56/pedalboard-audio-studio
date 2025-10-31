@@ -564,7 +564,7 @@ function App() {
                               theme.inputClass || 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
                             )}
                           >
-                            <option value="original">Original Format</option>
+                            <option value="original">Original</option>
                             <option value="wav">WAV</option>
                             <option value="mp3">MP3</option>
                             <option value="flac">FLAC</option>
