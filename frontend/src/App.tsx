@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent, MouseEvent } from 'react';
 import FileUpload from './components/FileUpload';
 import AudioPlayer from './components/AudioPlayer';
@@ -565,9 +565,9 @@ function App() {
                             )}
                           >
                             <option value="original">Original Format</option>
-                            <option value="wav">WAV (Lossless)</option>
+                            <option value="wav">WAV</option>
                             <option value="mp3">MP3</option>
-                            <option value="flac">FLAC (Lossless)</option>
+                            <option value="flac">FLAC</option>
                             <option value="ogg">OGG</option>
                           </select>
                           <button onClick={handleDownload} className={secondaryButtonClass}>
