@@ -31,7 +31,7 @@ function App() {
   const [processingAnimationIndex, setProcessingAnimationIndex] = useState(0);
   const [errorFading, setErrorFading] = useState(false);
   const [successFading, setSuccessFading] = useState(false);
-  const [downloadFormat, setDownloadFormat] = useState<string>('original');
+  const [downloadFormat, setDownloadFormat] = useState<string>('wav');
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const uploadAnimationRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const processingAnimationRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -556,23 +556,23 @@ function App() {
                       </button>
                       {processedAudioUrl && (
                         <>
+                          <button onClick={handleDownload} className={secondaryButtonClass}>
+                            Download
+                          </button>
                           <select
                             value={downloadFormat}
                             onChange={(e) => setDownloadFormat(e.target.value)}
                             className={cn(
-                              'px-3 py-2 text-sm font-semibold rounded transition-colors duration-200 border',
+                              'px-3 py-2 text-sm font-semibold rounded transition-colors duration-200 border text-center',
                               theme.inputClass || 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
                             )}
                           >
-                            <option value="original">Original</option>
+                            <option value="original">Same</option>
                             <option value="wav">WAV</option>
                             <option value="mp3">MP3</option>
                             <option value="flac">FLAC</option>
                             <option value="ogg">OGG</option>
                           </select>
-                          <button onClick={handleDownload} className={secondaryButtonClass}>
-                            Download
-                          </button>
                         </>
                       )}
                       <button onClick={handleReset} className={ghostButtonClass}>
