@@ -54,7 +54,7 @@ class UserSessionManager:
     MAX_FILES_PER_USER = 50
     MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024  # 100MB
     MAX_TOTAL_BYTES_PER_USER = 2 * 1024 * 1024 * 1024  # 2GB total
-    MAX_PROCESSES_PER_HOUR = 20
+    MAX_PROCESSES_PER_HOUR = 200
     SESSION_MAX_AGE_HOURS = 24
 
     def __init__(self):
