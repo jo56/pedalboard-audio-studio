@@ -1,2 +1,0 @@
-[phases.install]
-cmds = ["pip install uv && uv sync --frozen --no-dev"]
