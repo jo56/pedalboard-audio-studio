@@ -4,7 +4,7 @@ React + TypeScript client that pairs with the FastAPI backend to provide an audi
 
 ## Requirements
 
-- Node.js 18 or newer
+- Node.js 22 or newer (Vite 8 and ESLint 10 require Node ^20.19 or >=22.12; `.nvmrc` pins 22)
 - Backend API running locally on `http://localhost:8000` (or configure `VITE_API_URL`)
 
 ## Available Scripts
