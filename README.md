@@ -87,7 +87,7 @@ pedalboard-test/
 
 - Python 3.11 or higher
 - [uv](https://github.com/astral-sh/uv) (for Python environment and dependency management)
-- Node.js 16 or higher
+- Node.js 22 or newer (Vite 8 and ESLint 10 require Node ^20.19 or >=22.12; `frontend/.nvmrc` pins 22 for Cloudflare Pages)
 - npm (or yarn/pnpm)
 
 ### Backend Setup
